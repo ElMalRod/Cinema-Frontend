@@ -1,0 +1,18 @@
+﻿<section class="menu-hero surface-card">
+  <div class="hero-copy">
+    <h1>Panel principal</h1>
+    <p>Bienvenido, {{ userName }}. Selecciona un módulo para gestionar el sistema de cines.</p>
+  </div>
+  <img class="hero-logo" src="/logo-cinema.svg" alt="Cinema logo" />
+</section>
+
+<section class="menu-grid">
+  @for (module of modules; track module.key) {
+    <app-shared-card [title]="module.label" [footer]="module.description">
+      <div class="module-card-body">
+        <i class="module-icon" [class]="module.icon"></i>
+        <button pButton type="button" label="Abrir módulo" class="app-btn-primary" [routerLink]="module.path"></button>
+      </div>
+    </app-shared-card>
+  }
+</section>

@@ -1,0 +1,9 @@
+﻿:host {
+  display: block;
+}
+
+:host ::ng-deep .app-main {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}

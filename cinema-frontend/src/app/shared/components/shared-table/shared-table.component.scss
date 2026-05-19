@@ -1,0 +1,16 @@
+﻿.table-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.action-col {
+  width: 120px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.empty-msg {
+  text-align: center;
+  color: var(--color-secondary);
+  padding: 1rem;
+}

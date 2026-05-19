@@ -1,0 +1,58 @@
+﻿@use "bulma/css/bulma.css";
+@import "primeicons/primeicons.css";
+
+:root {
+  --color-primary: #1a3263;
+  --color-secondary: #547792;
+  --color-accent: #fab95b;
+  --color-bg: #e8e2db;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(250, 185, 91, 0.2) 0%, rgba(250, 185, 91, 0) 36%),
+    radial-gradient(circle at 92% 92%, rgba(84, 119, 146, 0.2) 0%, rgba(84, 119, 146, 0) 36%),
+    var(--color-bg);
+  color: var(--color-primary);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.app-main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.25rem;
+}
+
+.surface-card {
+  background: #ffffff;
+  border: 1px solid var(--color-secondary);
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 30px rgba(26, 50, 99, 0.08);
+}
+
+.p-button.p-button-primary,
+.p-button.app-btn-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.p-button.app-btn-accent {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-primary);
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.p-datatable .p-datatable-tbody > tr:nth-child(even) {
+  background: var(--color-bg);
+}

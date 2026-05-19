@@ -1,0 +1,42 @@
+﻿<div class="auth-page-wrapper">
+  <p-card styleClass="auth-page-card">
+    <div class="auth-layout">
+      <section class="auth-brand-panel">
+        <img src="/logo-cinema.svg" alt="Cinema logo" class="auth-logo" />
+        <h1>Registro Público</h1>
+        <p>Solo puedes registrarte como Cliente o Administrador de Cine.</p>
+      </section>
+
+      <section class="auth-form-panel">
+        <h2 class="form-title">{{ title }}</h2>
+        <p class="form-subtitle">{{ subtitle }}</p>
+
+        <div class="field-grid">
+          <label for="register-name">Nombre completo</label>
+          <input pInputText id="register-name" type="text" placeholder="Ingresa tu nombre" />
+
+          <label for="register-email">Correo electrónico</label>
+          <input pInputText id="register-email" type="email" placeholder="usuario@correo.com" />
+
+          <label for="register-role">Tipo de cuenta</label>
+          <p-select
+            inputId="register-role"
+            [options]="roleOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecciona tu rol"
+            appendTo="body"
+          ></p-select>
+
+          <label for="register-password">Contraseña</label>
+          <p-password inputId="register-password" [toggleMask]="true" [feedback]="false" placeholder="Crea una contraseña"></p-password>
+        </div>
+
+        <div class="form-actions">
+          <button pButton type="button" label="Crear cuenta" class="app-btn-primary"></button>
+          <a routerLink="/login" class="switch-link">¿Ya tienes cuenta? Inicia sesión</a>
+        </div>
+      </section>
+    </div>
+  </p-card>
+</div>

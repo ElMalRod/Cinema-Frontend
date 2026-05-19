@@ -1,0 +1,4 @@
+﻿<app-shared-card title="Crear cuenta">
+  <app-shared-form [fields]="fields" submitLabel="Registrar" [loading]="loading" (onSubmit)="onSubmit($event)"></app-shared-form>
+  <p class="register-note">¿Ya tienes cuenta? <a routerLink="/auth/login">Inicia sesión</a></p>
+</app-shared-card>

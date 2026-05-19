@@ -1,0 +1,30 @@
+﻿<p-toolbar styleClass="app-toolbar">
+  <ng-template pTemplate="start">
+    <a class="brand-link" routerLink="/" aria-label="Ir al inicio">
+      <img class="brand-logo" src="/logo-cinema.svg" alt="Cinema logo" />
+      <span class="brand-name">Cinema Frontend</span>
+    </a>
+  </ng-template>
+
+  <ng-template pTemplate="center">
+    <div class="toolbar-links">
+      @for (link of publicLinks; track link.path) {
+        <button pButton type="button" [label]="link.label" [icon]="link.icon" class="p-button-text nav-btn" [routerLink]="link.path"></button>
+      }
+      @for (link of roleLinksCurrent; track link.path) {
+        <button pButton type="button" [label]="link.label" [icon]="link.icon" class="p-button-text nav-btn" [routerLink]="link.path"></button>
+      }
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="end">
+    @if (isAuthenticated) {
+      <button pButton type="button" label="Cerrar sesión" icon="pi pi-sign-out" class="app-btn-accent p-button-sm" (click)="logout()"></button>
+    } @else {
+      <div class="auth-links">
+        <button pButton type="button" label="Login" icon="pi pi-sign-in" class="p-button-text nav-btn" routerLink="/login"></button>
+        <button pButton type="button" label="Registro" class="app-btn-accent p-button-sm" routerLink="/register"></button>
+      </div>
+    }
+  </ng-template>
+</p-toolbar>

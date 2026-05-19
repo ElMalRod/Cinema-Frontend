@@ -1,0 +1,39 @@
+﻿<form class="form-grid" [formGroup]="form" (ngSubmit)="submit()">
+  @for (field of fields; track field.name) {
+    <div class="field-wrapper">
+      <label [for]="field.name">{{ field.label }}</label>
+
+      @switch (field.type) {
+        @case ('text') {
+          <input pInputText [id]="field.name" [formControlName]="field.name" [placeholder]="field.placeholder || ''" />
+        }
+        @case ('email') {
+          <input pInputText [id]="field.name" type="email" [formControlName]="field.name" [placeholder]="field.placeholder || ''" />
+        }
+        @case ('password') {
+          <p-password [inputId]="field.name" [formControlName]="field.name" [toggleMask]="true" [feedback]="false"></p-password>
+        }
+        @case ('select') {
+          <p-select [options]="field.options || []" [formControlName]="field.name" optionLabel="label" optionValue="value" [placeholder]="field.placeholder || 'Seleccione'" appendTo="body"></p-select>
+        }
+        @case ('textarea') {
+          <textarea pTextarea [id]="field.name" [formControlName]="field.name" [placeholder]="field.placeholder || ''" rows="4"></textarea>
+        }
+        @case ('number') {
+          <p-inputnumber [inputId]="field.name" [formControlName]="field.name" [min]="field.min" [max]="field.max"></p-inputnumber>
+        }
+        @case ('date') {
+          <p-datepicker [inputId]="field.name" [formControlName]="field.name" appendTo="body" dateFormat="dd/mm/yy"></p-datepicker>
+        }
+      }
+
+      @if (isInvalid(field.name)) {
+        <small class="error-text">Campo inválido</small>
+      }
+    </div>
+  }
+
+  <div class="submit-row">
+    <button pButton type="submit" [label]="submitLabel" [loading]="loading" class="app-btn-primary"></button>
+  </div>
+</form>
