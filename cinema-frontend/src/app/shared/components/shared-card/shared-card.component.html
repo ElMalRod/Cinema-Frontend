@@ -1,0 +1,6 @@
+﻿<p-card [header]="title" styleClass="cinema-card">
+  <ng-content></ng-content>
+  @if (footer) {
+    <ng-template pTemplate="footer">{{ footer }}</ng-template>
+  }
+</p-card>

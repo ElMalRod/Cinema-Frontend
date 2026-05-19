@@ -1,0 +1,3 @@
+﻿<app-shared-card [title]="config.label" [footer]="config.description">
+  <app-shared-table [columns]="config.columns" [data]="data" [loading]="loading" [paginator]="true" [showActions]="false" [emptyMessage]="'No hay registros de ' + config.label.toLowerCase()"></app-shared-table>
+</app-shared-card>

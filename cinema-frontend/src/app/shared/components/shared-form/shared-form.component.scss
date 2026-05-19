@@ -1,0 +1,23 @@
+﻿.form-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.field-wrapper {
+  display: grid;
+  gap: 0.5rem;
+}
+
+label {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.error-text {
+  color: #b42318;
+}
+
+.submit-row {
+  display: flex;
+  justify-content: flex-end;
+}

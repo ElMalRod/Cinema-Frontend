@@ -1,0 +1,26 @@
+﻿.page-wrapper {
+  min-height: 100vh;
+  background: var(--color-bg);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.page-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(26, 50, 99, 0.08);
+}
+.page-header {
+  padding: 1.5rem 2rem 0;
+}
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin: 0;
+}
+.page-subtitle {
+  color: var(--color-text-muted, var(--color-secondary));
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+}

@@ -1,0 +1,51 @@
+﻿<p-table
+  #dt
+  [value]="data"
+  [loading]="loading"
+  [paginator]="paginator"
+  [rows]="rows"
+  [globalFilterFields]="globalFilterFields"
+  [tableStyle]="{ 'min-width': '50rem' }"
+>
+  <ng-template pTemplate="caption">
+    <div class="table-actions">
+      <p-iconfield>
+        <p-inputicon>
+          <i class="pi pi-search"></i>
+        </p-inputicon>
+        <input pInputText type="text" [placeholder]="searchPlaceholder" (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+      </p-iconfield>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="header">
+    <tr>
+      @for (column of columns; track column.field) {
+        <th>{{ column.header }}</th>
+      }
+      @if (showActions) {
+        <th class="action-col">Acciones</th>
+      }
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-row>
+    <tr (click)="emitRowSelect(row)">
+      @for (column of columns; track column.field) {
+        <td>{{ resolveFieldData(row, column.field) }}</td>
+      }
+      @if (showActions) {
+        <td class="action-col">
+          <button pButton type="button" icon="pi pi-pencil" class="p-button-sm p-button-text" (click)="emitEdit(row); $event.stopPropagation()"></button>
+          <button pButton type="button" icon="pi pi-trash" class="p-button-sm p-button-text p-button-danger" (click)="emitDelete(row); $event.stopPropagation()"></button>
+        </td>
+      }
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td [attr.colspan]="colspan" class="empty-msg">{{ emptyMessage }}</td>
+    </tr>
+  </ng-template>
+</p-table>

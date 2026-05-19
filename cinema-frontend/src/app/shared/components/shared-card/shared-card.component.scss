@@ -1,0 +1,9 @@
+﻿:host ::ng-deep .cinema-card {
+  border: 1px solid var(--color-secondary);
+  border-radius: 0.75rem;
+  background: #ffffff;
+}
+
+:host ::ng-deep .cinema-card .p-card-title {
+  color: var(--color-primary);
+}

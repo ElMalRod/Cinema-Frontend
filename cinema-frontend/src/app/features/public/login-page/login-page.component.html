@@ -1,0 +1,29 @@
+﻿<div class="auth-page-wrapper">
+  <p-card styleClass="auth-page-card">
+    <div class="auth-layout">
+      <section class="auth-brand-panel">
+        <img src="/logo-cinema.svg" alt="Cinema logo" class="auth-logo" />
+        <h1>Cinema Frontend</h1>
+        <p>Cartelera, cines, boletos y administración en una sola plataforma.</p>
+      </section>
+
+      <section class="auth-form-panel">
+        <h2 class="form-title">{{ title }}</h2>
+        <p class="form-subtitle">{{ subtitle }}</p>
+
+        <div class="field-grid">
+          <label for="login-email">Correo electrónico</label>
+          <input pInputText id="login-email" type="email" placeholder="usuario@correo.com" />
+
+          <label for="login-password">Contraseña</label>
+          <p-password inputId="login-password" [toggleMask]="true" [feedback]="false" placeholder="Ingresa tu contraseña"></p-password>
+        </div>
+
+        <div class="form-actions">
+          <button pButton type="button" label="Ingresar" class="app-btn-primary"></button>
+          <a routerLink="/register" class="switch-link">¿No tienes cuenta? Regístrate</a>
+        </div>
+      </section>
+    </div>
+  </p-card>
+</div>
