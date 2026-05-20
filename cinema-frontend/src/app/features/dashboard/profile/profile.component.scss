@@ -1,0 +1,36 @@
+﻿:host {
+  display: block;
+  max-width: 52rem;
+  margin: 2rem auto;
+}
+
+.profile-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.readonly-group {
+  margin-bottom: 0.8rem;
+}
+
+.readonly-group label {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.readonly-value {
+  margin: 0;
+}
+
+.message {
+  margin-top: 0.75rem;
+}
+
+.error {
+  color: #b42318;
+}
+
+.success {
+  color: #067647;
+}

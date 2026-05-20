@@ -16,7 +16,7 @@ export class LoginComponent {
 
   readonly fields: FormField[] = [
     { name: 'email', label: 'Correo', type: 'email', required: true, placeholder: 'usuario@correo.com' },
-    { name: 'password', label: 'Contraseña', type: 'password', required: true }
+    { name: 'password', label: 'ContraseÃ±a', type: 'password', required: true }
   ];
 
   constructor(

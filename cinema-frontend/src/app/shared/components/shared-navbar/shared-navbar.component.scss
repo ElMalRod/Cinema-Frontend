@@ -1,4 +1,4 @@
-﻿:host {
+:host {
   display: block;
 }
 
@@ -40,6 +40,12 @@
 }
 
 .auth-links {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.session-actions {
   display: flex;
   align-items: center;
   gap: 0.4rem;

@@ -25,7 +25,7 @@ export class RegisterComponent {
       required: true,
       options: USER_ROLE_OPTIONS
     },
-    { name: 'password', label: 'Contraseña', type: 'password', required: true }
+    { name: 'password', label: 'ContraseÃ±a', type: 'password', required: true }
   ];
 
   constructor(
