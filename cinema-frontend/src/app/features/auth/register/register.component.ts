@@ -1,4 +1,4 @@
-﻿import { Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { UserRole, USER_ROLE_OPTIONS } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -25,7 +25,7 @@ export class RegisterComponent {
       required: true,
       options: USER_ROLE_OPTIONS
     },
-    { name: 'password', label: 'Contraseña', type: 'password', required: true }
+    { name: 'password', label: 'Contrase�a', type: 'password', required: true }
   ];
 
   constructor(
@@ -39,13 +39,13 @@ export class RegisterComponent {
       .register({
         name: String(value['name'] ?? ''),
         email: String(value['email'] ?? ''),
-        role: String(value['role'] ?? 'CUSTOMER') as UserRole,
+        role: String(value['role'] ?? 'CLIENT') as UserRole,
         password: String(value['password'] ?? '')
       })
       .subscribe({
         next: () => {
           this.loading = false;
-          this.router.navigate(['/auth/login']);
+          this.router.navigate(['/login']);
         },
         error: () => {
           this.loading = false;
