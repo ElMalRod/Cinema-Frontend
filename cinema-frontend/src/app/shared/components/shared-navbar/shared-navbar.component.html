@@ -1,4 +1,4 @@
-﻿<p-toolbar styleClass="app-toolbar">
+<p-toolbar styleClass="app-toolbar">
   <ng-template pTemplate="start">
     <a class="brand-link" routerLink="/" aria-label="Ir al inicio">
       <img class="brand-logo" src="/logo-cinema.svg" alt="Cinema logo" />
@@ -19,7 +19,16 @@
 
   <ng-template pTemplate="end">
     @if (isAuthenticated) {
-      <button pButton type="button" label="Cerrar sesión" icon="pi pi-sign-out" class="app-btn-accent p-button-sm" (click)="logout()"></button>
+      <div class="session-actions">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-user"
+          class="p-button-rounded p-button-text nav-btn"
+          aria-label="Mi perfil"
+          (click)="goToProfile()"></button>
+        <button pButton type="button" label="Cerrar sesión" icon="pi pi-sign-out" class="app-btn-accent p-button-sm" (click)="logout()"></button>
+      </div>
     } @else {
       <div class="auth-links">
         <button pButton type="button" label="Login" icon="pi pi-sign-in" class="p-button-text nav-btn" routerLink="/login"></button>

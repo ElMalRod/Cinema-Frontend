@@ -1,5 +1,6 @@
-import { Routes } from '@angular/router';
+﻿import { Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
+import { GuestGuard } from './core/guards/guest.guard';
 import { RoleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
@@ -21,16 +22,32 @@ export const routes: Routes = [
   },
   {
     path: 'login',
+    canActivate: [GuestGuard],
     loadComponent: () => import('./features/auth/login/login.component').then((m) => m.LoginComponent)
   },
   {
     path: 'register',
+    canActivate: [GuestGuard],
     loadComponent: () => import('./features/auth/register/register.component').then((m) => m.RegisterComponent)
+  },
+  {
+    path: 'forgot-password',
+    canActivate: [GuestGuard],
+    loadComponent: () => import('./features/auth/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./features/auth/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent)
   },
   {
     path: 'dashboard',
     canActivate: [AuthGuard],
     loadComponent: () => import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent)
+  },
+  {
+    path: 'dashboard/profile',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./features/dashboard/profile/profile.component').then((m) => m.ProfileComponent)
   },
   {
     path: 'dashboard/client/tickets',

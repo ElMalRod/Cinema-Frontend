@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { UserRole } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -59,6 +59,10 @@ export class SharedNavbarComponent implements OnInit {
       this.isAuthenticated = !!user;
       this.roleLinksCurrent = user ? this.roleLinks[user.role] ?? [] : [];
     });
+  }
+
+  goToProfile(): void {
+    this.router.navigate(['/dashboard/profile']);
   }
 
   logout(): void {

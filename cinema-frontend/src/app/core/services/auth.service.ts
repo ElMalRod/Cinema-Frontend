@@ -1,6 +1,6 @@
-import { HttpClient } from '@angular/common/http';
+﻿import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, map, of, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { User, UserRole } from '../models/user.model';
 
@@ -17,11 +17,32 @@ interface RegisterRequest {
   role: UserRole;
 }
 
+interface ForgotPasswordRequest {
+  email: string;
+}
+
+interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 interface BackendLoginResponse {
   token: string;
   userId: string;
   email: string;
   role: UserRole;
+}
+
+export interface MeResponse {
+  userId: string;
+  email: string;
+  role: UserRole;
+  active: boolean;
 }
 
 interface AuthResponse {
@@ -54,11 +75,28 @@ export class AuthService {
     return this.http.post(`${environment.apiBaseUrl}/auth/register`, payload);
   }
 
+  forgotPassword(payload: ForgotPasswordRequest): Observable<void> {
+    return this.http.post<void>(`${environment.apiBaseUrl}/auth/forgot-password`, payload);
+  }
+
+  resetPassword(payload: ResetPasswordRequest): Observable<void> {
+    return this.http.post<void>(`${environment.apiBaseUrl}/auth/reset-password`, payload);
+  }
+
+  changePassword(payload: ChangePasswordRequest): Observable<void> {
+    return this.http.post<void>(`${environment.apiBaseUrl}/auth/change-password`, payload);
+  }
+
+  getMe(): Observable<MeResponse> {
+    return this.http.get<MeResponse>(`${environment.apiBaseUrl}/auth/me`);
+  }
+
   logout(): Observable<boolean> {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    this.currentUserSubject.next(null);
-    return of(true);
+    return this.http.post<void>(`${environment.apiBaseUrl}/auth/logout`, {}).pipe(
+      map(() => true),
+      catchError(() => of(false)),
+      tap(() => this.clearSession())
+    );
   }
 
   getToken(): string | null {
@@ -102,5 +140,11 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  private clearSession(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    this.currentUserSubject.next(null);
   }
 }
