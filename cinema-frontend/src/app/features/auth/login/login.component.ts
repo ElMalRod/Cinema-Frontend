@@ -1,4 +1,4 @@
-﻿import { Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { SharedModule } from '../../../shared/shared.module';
@@ -16,7 +16,7 @@ export class LoginComponent {
 
   readonly fields: FormField[] = [
     { name: 'email', label: 'Correo', type: 'email', required: true, placeholder: 'usuario@correo.com' },
-    { name: 'password', label: 'Contraseña', type: 'password', required: true }
+    { name: 'password', label: 'Contrase�a', type: 'password', required: true }
   ];
 
   constructor(
@@ -34,7 +34,7 @@ export class LoginComponent {
       .subscribe({
         next: () => {
           this.loading = false;
-          this.router.navigate(['/menu']);
+          this.router.navigate(['/dashboard']);
         },
         error: () => {
           this.loading = false;

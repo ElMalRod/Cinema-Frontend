@@ -1,4 +1,4 @@
-﻿import { Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
 import { RoleGuard } from './core/guards/role.guard';
 
@@ -21,11 +21,11 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    loadComponent: () => import('./features/public/login-page/login-page.component').then((m) => m.LoginPage)
+    loadComponent: () => import('./features/auth/login/login.component').then((m) => m.LoginComponent)
   },
   {
     path: 'register',
-    loadComponent: () => import('./features/public/register-page/register-page.component').then((m) => m.RegisterPage)
+    loadComponent: () => import('./features/auth/register/register.component').then((m) => m.RegisterComponent)
   },
   {
     path: 'dashboard',

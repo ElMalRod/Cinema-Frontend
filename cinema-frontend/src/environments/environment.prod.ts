@@ -1,4 +1,4 @@
-﻿export const environment = {
+export const environment = {
   production: true,
-  apiBaseUrl: 'https://cinema-api.aws.example.com/api'
+  apiBaseUrl: 'https://cinema-api.aws.example.com'
 };
