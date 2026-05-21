@@ -1,5 +1,5 @@
-﻿import { Injectable, inject } from '@angular/core';
-import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router, UrlTree } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 @Injectable({ providedIn: 'root' })
@@ -11,6 +11,11 @@ export class GuestGuard implements CanActivate {
     if (state.url.startsWith('/reset-password')) {
       return true;
     }
-    return !this.authService.isAuthenticated() || this.router.parseUrl('/dashboard');
+
+    if (this.authService.hasValidSession()) {
+      return this.router.parseUrl('/dashboard');
+    }
+
+    return true;
   }
 }

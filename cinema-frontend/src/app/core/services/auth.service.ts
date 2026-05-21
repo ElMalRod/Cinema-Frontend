@@ -1,6 +1,6 @@
-﻿import { HttpClient } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, catchError, map, of, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { User, UserRole } from '../models/user.model';
 
@@ -33,9 +33,10 @@ interface ChangePasswordRequest {
 
 interface BackendLoginResponse {
   token: string;
-  userId: string;
-  email: string;
-  role: UserRole;
+  type?: string;
+  userId?: string;
+  email?: string;
+  role?: UserRole;
 }
 
 export interface MeResponse {
@@ -59,10 +60,13 @@ export class AuthService {
 
   login(payload: LoginRequest): Observable<AuthResponse> {
     return this.http.post<BackendLoginResponse>(`${environment.apiBaseUrl}/auth/login`, payload).pipe(
-      map((response) => {
-        const user = this.mapUser(response);
-        return { token: response.token, user };
-      }),
+      tap((response) => localStorage.setItem('token', response.token)),
+      switchMap((response) =>
+        this.getMe().pipe(
+          map((me) => ({ token: response.token, user: this.mapUserFromMe(me) })),
+          catchError(() => of({ token: response.token, user: this.mapUserFromLogin(response, payload.email) }))
+        )
+      ),
       tap(({ token, user }) => {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
@@ -115,12 +119,41 @@ export class AuthService {
     return !!this.getToken();
   }
 
-  private mapUser(response: BackendLoginResponse): User {
+  hasValidSession(): boolean {
+    return !!this.getToken() && !!this.getCurrentUser();
+  }
+
+  getDashboardRoute(role: UserRole | null = this.getRole()): string {
+    switch (role) {
+      case 'CLIENT':
+        return '/dashboard/client/tickets';
+      case 'CINEMA_ADMIN':
+        return '/dashboard/cinema/rooms';
+      case 'ADVERTISER':
+        return '/dashboard/advertiser/ads';
+      case 'SYSTEM_ADMIN':
+        return '/dashboard/admin/users';
+      default:
+        return '/login';
+    }
+  }
+
+  private mapUserFromMe(response: MeResponse): User {
     return {
       id: response.userId,
-      name: this.resolveName(response.email),
       email: response.email,
-      role: response.role
+      role: response.role,
+      name: this.resolveName(response.email)
+    };
+  }
+
+  private mapUserFromLogin(response: BackendLoginResponse, fallbackEmail: string): User {
+    const email = response.email ?? fallbackEmail;
+    return {
+      id: response.userId ?? this.currentUserSubject.value?.id ?? '',
+      email,
+      role: response.role ?? this.currentUserSubject.value?.role ?? 'CLIENT',
+      name: this.resolveName(email)
     };
   }
 
