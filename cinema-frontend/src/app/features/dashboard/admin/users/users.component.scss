@@ -9,6 +9,11 @@
   gap: 1rem;
 }
 
+.header-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .table-wrapper {
   overflow-x: auto;
 }
@@ -23,11 +28,16 @@
   text-align: left;
   padding: 0.7rem;
   border-bottom: 1px solid #e8ecf5;
+  vertical-align: middle;
 }
 
 .users-table th {
   color: var(--color-text-muted, #5f6c8e);
   font-weight: 600;
+}
+
+.cinema-select-cell {
+  min-width: 240px;
 }
 
 .status {
@@ -55,6 +65,11 @@
 
 .message {
   margin-top: 0.75rem;
+}
+
+.hint {
+  margin-top: 0.75rem;
+  color: var(--color-text-muted, #5f6c8e);
 }
 
 .error {

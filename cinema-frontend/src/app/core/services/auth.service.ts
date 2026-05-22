@@ -58,6 +58,10 @@ export class AuthService {
 
   readonly currentUser$ = this.currentUserSubject.asObservable();
 
+  constructor() {
+    this.bootstrapSession();
+  }
+
   login(payload: LoginRequest): Observable<AuthResponse> {
     return this.http.post<BackendLoginResponse>(`${environment.apiBaseUrl}/auth/login`, payload).pipe(
       tap((response) => localStorage.setItem('token', response.token)),
@@ -112,7 +116,7 @@ export class AuthService {
   }
 
   getRole(): UserRole | null {
-    return this.currentUserSubject.value?.role ?? null;
+    return this.currentUserSubject.value?.role ?? this.getRoleFromToken();
   }
 
   isAuthenticated(): boolean {
@@ -120,7 +124,7 @@ export class AuthService {
   }
 
   hasValidSession(): boolean {
-    return !!this.getToken() && !!this.getCurrentUser();
+    return this.isAuthenticated();
   }
 
   getDashboardRoute(role: UserRole | null = this.getRole()): string {
@@ -135,6 +139,58 @@ export class AuthService {
         return '/dashboard/admin/users';
       default:
         return '/login';
+    }
+  }
+
+  private bootstrapSession(): void {
+    if (!this.isAuthenticated() || this.currentUserSubject.value) {
+      return;
+    }
+
+    this.getMe()
+      .pipe(
+        map((me) => this.mapUserFromMe(me)),
+        catchError(() => {
+          this.clearSession();
+          return of(null);
+        })
+      )
+      .subscribe((user) => {
+        if (!user) {
+          return;
+        }
+        localStorage.setItem('user', JSON.stringify(user));
+        this.currentUserSubject.next(user);
+      });
+  }
+
+  private getRoleFromToken(): UserRole | null {
+    const payload = this.decodeTokenPayload(this.getToken());
+    const role = payload?.['role'];
+
+    if (role === 'CLIENT' || role === 'CINEMA_ADMIN' || role === 'ADVERTISER' || role === 'SYSTEM_ADMIN') {
+      return role;
+    }
+
+    return null;
+  }
+
+  private decodeTokenPayload(token: string | null): Record<string, unknown> | null {
+    if (!token) {
+      return null;
+    }
+
+    const parts = token.split('.');
+    if (parts.length < 2) {
+      return null;
+    }
+
+    try {
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+      return JSON.parse(atob(padded)) as Record<string, unknown>;
+    } catch {
+      return null;
     }
   }
 
