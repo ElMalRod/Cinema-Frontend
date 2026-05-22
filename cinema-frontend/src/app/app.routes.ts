@@ -127,5 +127,11 @@ export const routes: Routes = [
     data: { roles: ['SYSTEM_ADMIN'] },
     loadComponent: () => import('./features/dashboard/admin/reports/reports.component').then((m) => m.AdminReportsComponent)
   },
+  {
+    path: 'dashboard/admin/advertisers',
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['SYSTEM_ADMIN'] },
+    loadComponent: () => import('./features/dashboard/admin/advertisers/admin-advertisers.component').then((m) => m.AdminAdvertisersComponent)
+  },
   { path: '**', redirectTo: '' }
 ];
