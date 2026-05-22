@@ -4,42 +4,48 @@
   padding: 2rem;
 }
 
-.balance-box {
-  display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.balance-label {
-  color: var(--color-text-muted, #5f6c8e);
-}
-
-.balance-value {
-  font-size: 1.75rem;
-  color: var(--color-primary);
+.users-grid {
+  display: grid;
+  gap: 1rem;
 }
 
 .table-wrapper {
-  margin-top: 1rem;
   overflow-x: auto;
 }
 
-.wallet-table {
+.users-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.wallet-table th,
-.wallet-table td {
+.users-table th,
+.users-table td {
   text-align: left;
   padding: 0.7rem;
   border-bottom: 1px solid #e8ecf5;
 }
 
-.wallet-table th {
+.users-table th {
   color: var(--color-text-muted, #5f6c8e);
   font-weight: 600;
+}
+
+.status {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status.active {
+  background: #e8f7ef;
+  color: #067647;
+}
+
+.status.inactive {
+  background: #fef3f2;
+  color: #b42318;
 }
 
 .empty-row {

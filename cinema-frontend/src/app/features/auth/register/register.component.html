@@ -1,4 +1,8 @@
-<app-shared-card title="Crear cuenta">
+ï»¿<app-shared-card title="Crear cuenta">
   <app-shared-form [fields]="fields" submitLabel="Registrar" [loading]="loading" (onSubmit)="onSubmit($event)"></app-shared-form>
-  <p class="register-note">¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a></p>
+  @if (errorMessage) {
+    <p class="register-note error-message">{{ errorMessage }}</p>
+  }
+  <p class="register-note">Â¿Ya tienes cuenta? <a routerLink="/login">Inicia sesiÃ³n</a></p>
 </app-shared-card>
+

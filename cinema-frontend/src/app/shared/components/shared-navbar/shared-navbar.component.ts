@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { UserRole } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -40,6 +40,7 @@ export class SharedNavbarComponent implements OnInit {
       { label: 'Wallet', path: '/dashboard/advertiser/wallet', icon: 'pi pi-wallet' }
     ],
     SYSTEM_ADMIN: [
+      { label: 'Usuarios', path: '/dashboard/admin/users', icon: 'pi pi-users' },
       { label: 'Películas', path: '/dashboard/admin/movies', icon: 'pi pi-video' },
       { label: 'Precios', path: '/dashboard/admin/prices', icon: 'pi pi-dollar' },
       { label: 'Costos', path: '/dashboard/admin/costs', icon: 'pi pi-calculator' },
@@ -69,3 +70,4 @@ export class SharedNavbarComponent implements OnInit {
     this.authService.logout().subscribe(() => this.router.navigate(['/login']));
   }
 }
+
