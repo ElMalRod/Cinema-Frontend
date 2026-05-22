@@ -8,11 +8,19 @@
 
   <ng-template pTemplate="center">
     <div class="toolbar-links">
-      @for (link of publicLinks; track link.path) {
+      
+      @for (link of publicLinks; track link.label) {
         <button pButton type="button" [label]="link.label" [icon]="link.icon" class="p-button-text nav-btn" [routerLink]="link.path"></button>
       }
-      @for (link of roleLinksCurrent; track link.path) {
-        <button pButton type="button" [label]="link.label" [icon]="link.icon" class="p-button-text nav-btn" [routerLink]="link.path"></button>
+      
+      @for (link of roleLinksCurrent; track link.label) {
+        
+        @if (link.items) {
+          <button pButton type="button" [label]="link.label" icon="pi pi-angle-down" iconPos="right" class="p-button-text nav-btn" (click)="toggleMenu($event, link.items, navMenu)"></button>
+        } @else {
+          <button pButton type="button" [label]="link.label" [icon]="link.icon" class="p-button-text nav-btn" [routerLink]="link.path"></button>
+        }
+        
       }
     </div>
   </ng-template>
@@ -38,3 +46,4 @@
   </ng-template>
 </p-toolbar>
 
+<p-menu #navMenu [popup]="true" appendTo="body" [model]="activeMenuModel"></p-menu>

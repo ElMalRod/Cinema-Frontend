@@ -20,6 +20,7 @@ import { SharedFormComponent } from './components/shared-form/shared-form.compon
 import { SharedModalComponent } from './components/shared-modal/shared-modal.component';
 import { SharedNavbarComponent } from './components/shared-navbar/shared-navbar.component';
 import { SharedTableComponent } from './components/shared-table/shared-table.component';
+import { MenuModule } from 'primeng/menu';
 
 @NgModule({
   declarations: [
@@ -45,7 +46,8 @@ import { SharedTableComponent } from './components/shared-table/shared-table.com
     InputNumberModule,
     DatePickerModule,
     PasswordModule,
-    ToolbarModule
+    ToolbarModule,
+    MenuModule
   ],
   exports: [
     CommonModule,
@@ -55,7 +57,8 @@ import { SharedTableComponent } from './components/shared-table/shared-table.com
     SharedFormComponent,
     SharedModalComponent,
     SharedNavbarComponent,
-    SharedCardComponent
+    SharedCardComponent,
+    MenuModule
   ]
 })
 export class SharedModule {}

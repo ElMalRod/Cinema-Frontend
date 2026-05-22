@@ -2,20 +2,32 @@
 import { Router } from '@angular/router';
 import { UserRole } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { MenuItem } from 'primeng/api';
+
 
 interface NavLink {
   label: string;
-  path: string;
+  path?: string; 
   icon: string;
+  items?: NavLink[];
+  command?: () => void; 
 }
 
 @Component({
   selector: 'app-shared-navbar',
-  standalone: false,
+  standalone: false, // Recuerda importar MenuModule en tu SharedModule
   templateUrl: './shared-navbar.component.html',
   styleUrl: './shared-navbar.component.scss'
 })
 export class SharedNavbarComponent implements OnInit {
+  activeMenuModel: MenuItem[] = [];
+  toggleMenu(event: Event, items: MenuItem[] | undefined, menu: any): void {
+    if (items) {
+      this.activeMenuModel = items;
+      menu.toggle(event);
+      event.stopPropagation(); // Evitamos que el evento de clic rebote en el navegador
+    }
+  }
   isAuthenticated = false;
 
   readonly publicLinks: NavLink[] = [
@@ -42,7 +54,22 @@ export class SharedNavbarComponent implements OnInit {
     SYSTEM_ADMIN: [
       { label: 'Usuarios', path: '/dashboard/admin/users', icon: 'pi pi-users' },
       { label: 'Películas', path: '/dashboard/admin/movies', icon: 'pi pi-video' },
-      { label: 'Precios', path: '/dashboard/admin/prices', icon: 'pi pi-dollar' },
+      { 
+        label: 'Publicidad', 
+        icon: 'pi pi-megaphone',
+        items: [
+          { 
+            label: 'Anunciantes', 
+            icon: 'pi pi-users',
+            command: () => this.router.navigate(['/dashboard/admin/advertisers']) 
+          },
+          { 
+            label: 'Precios', 
+            icon: 'pi pi-dollar',
+            command: () => this.router.navigate(['/dashboard/admin/prices']) 
+          }
+        ]
+      },
       { label: 'Costos', path: '/dashboard/admin/costs', icon: 'pi pi-calculator' },
       { label: 'Reportes', path: '/dashboard/admin/reports', icon: 'pi pi-chart-bar' }
     ]
@@ -62,6 +89,16 @@ export class SharedNavbarComponent implements OnInit {
     });
   }
 
+  // Convierte los NavLinks a MenuItems de PrimeNG
+  getPrimeMenuItems(items: NavLink[] | undefined): MenuItem[] {
+    if (!items) return [];
+    return items.map(item => ({
+      label: item.label,
+      icon: item.icon,
+      routerLink: item.path
+    }));
+  }
+
   goToProfile(): void {
     this.router.navigate(['/dashboard/profile']);
   }
@@ -69,5 +106,5 @@ export class SharedNavbarComponent implements OnInit {
   logout(): void {
     this.authService.logout().subscribe(() => this.router.navigate(['/login']));
   }
-}
 
+}
