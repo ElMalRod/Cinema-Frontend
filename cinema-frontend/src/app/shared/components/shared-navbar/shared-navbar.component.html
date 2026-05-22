@@ -8,19 +8,11 @@
 
   <ng-template pTemplate="center">
     <div class="toolbar-links">
-      
-      @for (link of publicLinks; track link.label) {
+      @for (link of publicLinks; track link.path) {
         <button pButton type="button" [label]="link.label" [icon]="link.icon" class="p-button-text nav-btn" [routerLink]="link.path"></button>
       }
-      
-      @for (link of roleLinksCurrent; track link.label) {
-        
-        @if (link.items) {
-          <button pButton type="button" [label]="link.label" icon="pi pi-angle-down" iconPos="right" class="p-button-text nav-btn" (click)="toggleMenu($event, link.items, navMenu)"></button>
-        } @else {
-          <button pButton type="button" [label]="link.label" [icon]="link.icon" class="p-button-text nav-btn" [routerLink]="link.path"></button>
-        }
-        
+      @for (link of roleLinksCurrent; track link.path) {
+        <button pButton type="button" [label]="link.label" [icon]="link.icon" class="p-button-text nav-btn" [routerLink]="link.path"></button>
       }
     </div>
   </ng-template>
@@ -39,11 +31,10 @@
       </div>
     } @else {
       <div class="auth-links">
-        <button pButton type="button" label="Login" icon="pi pi-sign-in" class="p-button-text nav-btn" routerLink="/login"></button>
+        <button pButton type="button" label="Iniciar sesión" icon="pi pi-sign-in" class="p-button-text nav-btn" routerLink="/login"></button>
         <button pButton type="button" label="Registro" class="app-btn-accent p-button-sm" routerLink="/register"></button>
       </div>
     }
   </ng-template>
 </p-toolbar>
 
-<p-menu #navMenu [popup]="true" appendTo="body" [model]="activeMenuModel"></p-menu>

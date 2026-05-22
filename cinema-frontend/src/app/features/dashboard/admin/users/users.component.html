@@ -1,13 +1,77 @@
 ﻿<div class="page-wrapper">
   <div class="users-grid">
-    <app-shared-card title="Crear usuario">
-      <app-shared-form [fields]="fields" submitLabel="Crear" [loading]="creating" (onSubmit)="createUser($event)"></app-shared-form>
+    <app-shared-card title="Gestión de usuarios">
+      <div class="header-actions">
+        <button pButton type="button" icon="pi pi-user-plus" label="Crear usuario" class="app-btn-accent" (click)="openCreateUserModal()"></button>
+      </div>
+
+      @if (loadingCinemas) {
+        <p class="hint">Cargando listado de cines...</p>
+      }
 
       @if (errorMessage) {
         <p class="message error">{{ errorMessage }}</p>
       }
       @if (successMessage) {
         <p class="message success">{{ successMessage }}</p>
+      }
+    </app-shared-card>
+
+    <app-shared-modal title="Crear usuario" [visible]="showCreateUserModal" width="42rem" (onClose)="closeCreateUserModal()">
+      <app-shared-form [fields]="fields" submitLabel="Crear" [loading]="creating" (onSubmit)="createUser($event)"></app-shared-form>
+      <p class="hint">Si el rol es administrador de cine, puedes dejar el cine sin asignar y hacerlo después.</p>
+    </app-shared-modal>
+
+    <app-shared-card title="Administradores de cine sin asignar">
+      @if (loadingUnassigned) {
+        <p>Cargando administradores de cine sin asignar...</p>
+      } @else {
+        <div class="table-wrapper">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Teléfono</th>
+                <th>Cine</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of unassignedCinemaAdmins; track user.userId) {
+                <tr>
+                  <td>{{ user.name || '-' }}</td>
+                  <td>{{ user.email }}</td>
+                  <td>{{ user.phone || '-' }}</td>
+                  <td class="cinema-select-cell">
+                    <p-select
+                      [options]="getCinemaOptions()"
+                      [formControl]="getAssignmentControl(user.userId)"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Selecciona un cine"
+                      appendTo="body"></p-select>
+                  </td>
+                  <td>
+                    <button
+                      pButton
+                      type="button"
+                      size="small"
+                      [outlined]="true"
+                      label="Asignar"
+                      [disabled]="assigningUserId === user.userId || cinemas.length === 0"
+                      (click)="assignCinema(user)"></button>
+                  </td>
+                </tr>
+              }
+              @if (unassignedCinemaAdmins.length === 0) {
+                <tr>
+                  <td colspan="5" class="empty-row">No hay administradores de cine pendientes de asignación.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       }
     </app-shared-card>
 
@@ -63,4 +127,3 @@
     </app-shared-card>
   </div>
 </div>
-

@@ -7,10 +7,10 @@ import { MenuItem } from 'primeng/api';
 
 interface NavLink {
   label: string;
-  path?: string; 
+  path?: string;
   icon: string;
   items?: NavLink[];
-  command?: () => void; 
+  command?: () => void;
 }
 
 @Component({
@@ -39,7 +39,7 @@ export class SharedNavbarComponent implements OnInit {
   readonly roleLinks: Record<UserRole, NavLink[]> = {
     CLIENT: [
       { label: 'Boletos', path: '/dashboard/client/tickets', icon: 'pi pi-ticket' },
-      { label: 'Wallet', path: '/dashboard/client/wallet', icon: 'pi pi-wallet' },
+      { label: 'Cartera', path: '/dashboard/client/wallet', icon: 'pi pi-wallet' },
       { label: 'Comentarios', path: '/dashboard/client/comments', icon: 'pi pi-comments' }
     ],
     CINEMA_ADMIN: [
@@ -49,24 +49,24 @@ export class SharedNavbarComponent implements OnInit {
     ],
     ADVERTISER: [
       { label: 'Anuncios', path: '/dashboard/advertiser/ads', icon: 'pi pi-megaphone' },
-      { label: 'Wallet', path: '/dashboard/advertiser/wallet', icon: 'pi pi-wallet' }
+      { label: 'Cartera', path: '/dashboard/advertiser/wallet', icon: 'pi pi-wallet' }
     ],
     SYSTEM_ADMIN: [
       { label: 'Usuarios', path: '/dashboard/admin/users', icon: 'pi pi-users' },
       { label: 'Películas', path: '/dashboard/admin/movies', icon: 'pi pi-video' },
-      { 
-        label: 'Publicidad', 
+      {
+        label: 'Publicidad',
         icon: 'pi pi-megaphone',
         items: [
-          { 
-            label: 'Anunciantes', 
+          {
+            label: 'Anunciantes',
             icon: 'pi pi-users',
-            command: () => this.router.navigate(['/dashboard/admin/advertisers']) 
+            command: () => this.router.navigate(['/dashboard/admin/advertisers'])
           },
-          { 
-            label: 'Precios', 
+          {
+            label: 'Precios',
             icon: 'pi pi-dollar',
-            command: () => this.router.navigate(['/dashboard/admin/prices']) 
+            command: () => this.router.navigate(['/dashboard/admin/prices'])
           }
         ]
       },
@@ -83,10 +83,16 @@ export class SharedNavbarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.isAuthenticated = this.authService.isAuthenticated();
+
     this.authService.currentUser$.subscribe((user) => {
-      this.isAuthenticated = !!user;
+      this.isAuthenticated = !!user || this.authService.isAuthenticated();
       this.roleLinksCurrent = user ? this.roleLinks[user.role] ?? [] : [];
     });
+  }
+
+  navigateTo(path: string): void {
+    this.router.navigateByUrl(path);
   }
 
   // Convierte los NavLinks a MenuItems de PrimeNG
