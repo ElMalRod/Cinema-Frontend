@@ -1,13 +1,816 @@
 ﻿<div class="page-wrapper">
-  <p-card styleClass="page-card">
-    <ng-template pTemplate="header">
-      <div class="page-header">
-        <h1 class="page-title">{{ title }}</h1>
-        <p class="page-subtitle">{{ subtitle }}</p>
+
+  <p-toast position="top-right" appendTo="body" />
+
+  <!-- ── FORMULARIO ── -->
+  <app-shared-card title="Crear nueva película" [footer]="'Completa los datos y asigna clasificaciones, categorías, pósters y equipo.'">
+
+    @if (loading) {
+      <div class="spinner-center">
+        <p-progressSpinner strokeWidth="4" styleClass="w-8 h-8" />
       </div>
-    </ng-template>
-    <div class="page-content">
-      <p-progressSpinner *ngIf="false"/>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="movie-form">
+
+        <!-- ── INFORMACIÓN BÁSICA ── -->
+        <section class="form-section">
+          <h3 class="section-title">Información básica</h3>
+          <div class="form-grid">
+
+            <div class="field">
+              <label for="title">Título *</label>
+              <input pInputText id="title" formControlName="title"
+                     placeholder="Ej. Inception" class="w-full" />
+              @if (isInvalid('title')) {
+                <small class="error-text">Requerido (2–75 caracteres)</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="originalLanguage">Idioma original *</label>
+              <input pInputText id="originalLanguage" formControlName="originalLanguage"
+                     placeholder="Ej. English" class="w-full" />
+              @if (isInvalid('originalLanguage')) {
+                <small class="error-text">Requerido</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="duration">Duración (min) *</label>
+              <p-inputnumber inputId="duration" formControlName="duration"
+                             [min]="1" [showButtons]="false"
+                             placeholder="148" styleClass="w-full" />
+              @if (isInvalid('duration')) {
+                <small class="error-text">Requerido (mínimo 1)</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="releaseDate">Fecha de estreno *</label>
+              <p-datepicker inputId="releaseDate" formControlName="releaseDate"
+                            [minDate]="today" appendTo="body"
+                            dateFormat="dd/mm/yy" styleClass="w-full" />
+              @if (isInvalid('releaseDate')) {
+                <small class="error-text">Requerida y debe ser futura</small>
+              }
+            </div>
+
+            <div class="field field-full">
+              <label for="synopsis">Sinopsis *</label>
+              <textarea pTextarea id="synopsis" formControlName="synopsis"
+                        rows="4" placeholder="Breve descripción de la película..."
+                        class="w-full"></textarea>
+              @if (isInvalid('synopsis')) {
+                <small class="error-text">Requerida (2–255 caracteres)</small>
+              }
+            </div>
+
+            <div class="field field-full">
+              <label for="trailerLink">Enlace del tráiler</label>
+              <input pInputText id="trailerLink" formControlName="trailerLink"
+                     placeholder="https://www.youtube.com/watch?v=..." class="w-full" />
+              @if (isInvalid('trailerLink')) {
+                <small class="error-text">Debe ser una URL válida</small>
+              }
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ── CLASIFICACIONES ── -->
+        <section class="form-section">
+          <h3 class="section-title">Clasificación *</h3>
+          <div class="field">
+            <p-select
+              formControlName="classUS"
+              [options]="classificationOptionsUS"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sin clasificación"
+              appendTo="body"
+              [showClear]="true"
+              styleClass="w-full">
+            </p-select>
+          </div>
+          @if (classificationError) {
+            <small class="error-text">Selecciona una clasificación para continuar.</small>
+          }
+        </section>
+
+        <!-- ── CATEGORÍAS ── -->
+        <section class="form-section">
+          <h3 class="section-title">Categorías <span class="optional">(opcional)</span></h3>
+          <div class="field">
+            <p-multiselect
+              formControlName="categories"
+              [options]="categoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione categorías"
+              appendTo="body"
+              styleClass="w-full">
+            </p-multiselect>
+          </div>
+        </section>
+
+        <!-- ── PÓSTERS ── -->
+        <section class="form-section">
+          <div class="modal-section-row">
+            <div class="modal-section-info">
+              <h3 class="section-title">Pósters <span class="optional">(opcional)</span></h3>
+              @if (postersArray.length > 0) {
+                <span class="item-badge">{{ postersArray.length }} agregado(s)</span>
+              } @else {
+                <span class="item-badge item-badge-empty">Sin pósters</span>
+              }
+            </div>
+            <button pButton type="button" [outlined]="true" icon="pi pi-images"
+                    label="Gestionar pósters" (click)="showPostersModal = true">
+            </button>
+          </div>
+        </section>
+
+        <!-- ── EQUIPO ── -->
+        <section class="form-section">
+          <div class="modal-section-row">
+            <div class="modal-section-info">
+              <h3 class="section-title">Equipo <span class="optional">(directores, guionistas, productores)</span></h3>
+              @if (peopleFormArray.length > 0) {
+                <span class="item-badge">{{ peopleFormArray.length }} persona(s) asignada(s)</span>
+              } @else {
+                <span class="item-badge item-badge-empty">Sin equipo asignado</span>
+              }
+            </div>
+            <button pButton type="button" [outlined]="true" icon="pi pi-users"
+                    label="Gestionar equipo" (click)="showPeopleModal = true"
+                    [disabled]="peopleOptions.length === 0">
+            </button>
+          </div>
+          @if (peopleOptions.length === 0 && !loading) {
+            <p class="empty-hint">No hay personas registradas en el sistema.</p>
+          }
+        </section>
+
+        <!-- ── REPARTO (ACTORES) ── -->
+        <section class="form-section">
+          <div class="modal-section-row">
+            <div class="modal-section-info">
+              <h3 class="section-title">Reparto <span class="optional">(actores y personajes)</span></h3>
+              @if (actorsFormArray.length > 0) {
+                <span class="item-badge">{{ actorsFormArray.length }} actor(es) asignado(s)</span>
+              } @else {
+                <span class="item-badge item-badge-empty">Sin reparto asignado</span>
+              }
+            </div>
+            <button pButton type="button" [outlined]="true" icon="pi pi-star"
+                    label="Gestionar reparto" (click)="showActorsModal = true"
+                    [disabled]="actorOptions.length === 0">
+            </button>
+          </div>
+          @if (actorOptions.length === 0 && !loading) {
+            <p class="empty-hint">No hay actores registrados en el sistema.</p>
+          }
+        </section>
+
+        <!-- ── MENSAJES Y SUBMIT ── -->
+        <div class="form-actions">
+          <button pButton type="submit" label="Crear película"
+                  class="app-btn-primary" [loading]="submitting">
+          </button>
+        </div>
+
+        <!-- ══ MODAL: PÓSTERS ══ -->
+        <p-dialog header="Pósters de la película"
+                  [(visible)]="showPostersModal"
+                  [modal]="true" [draggable]="false" [resizable]="false"
+                  [style]="{width: '780px', maxWidth: '95vw'}"
+                  appendTo="body">
+
+          <div formArrayName="posters" class="dynamic-list">
+            @for (poster of postersArray.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="dynamic-card">
+
+                <div class="field">
+                  <label class="card-label">URL de imagen</label>
+                  <input pInputText formControlName="urlImagen"
+                         placeholder="https://..." class="w-full" />
+                  @if (isPosterFieldInvalid(i, 'urlImagen')) {
+                    <small class="error-text">URL requerida y válida (https://...)</small>
+                  }
+                </div>
+
+                <label class="checkbox-inline">
+                  <input type="checkbox" formControlName="isMain"
+                         (change)="setMainPoster(i, $event)" />
+                  <span>Imagen principal</span>
+                </label>
+
+                <button pButton type="button" severity="danger" [outlined]="true"
+                        icon="pi pi-trash" label="Quitar" (click)="removePoster(i)">
+                </button>
+
+              </div>
+            }
+          </div>
+
+          @if (postersArray.length === 0) {
+            <p class="empty-hint">No hay pósters agregados aún. Usa el botón para añadir uno.</p>
+          }
+
+          <div class="dialog-footer-actions">
+            <button pButton type="button" [outlined]="true" icon="pi pi-plus"
+                    label="Agregar póster" (click)="addPoster()">
+            </button>
+            <button pButton type="button" icon="pi pi-check"
+                    label="Listo" (click)="showPostersModal = false">
+            </button>
+          </div>
+        </p-dialog>
+
+        <!-- ══ MODAL: EQUIPO ══ -->
+        <p-dialog header="Equipo de la película"
+                  [(visible)]="showPeopleModal"
+                  [modal]="true" [draggable]="false" [resizable]="false"
+                  [style]="{width: '780px', maxWidth: '95vw'}"
+                  appendTo="body">
+
+          <div formArrayName="people" class="dynamic-list">
+            @for (person of peopleFormArray.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="dynamic-card">
+
+                <div class="field">
+                  <label class="card-label">Persona</label>
+                  <p-select
+                    formControlName="peopleId"
+                    [options]="peopleSelectOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Seleccionar persona"
+                    appendTo="body"
+                    styleClass="w-full">
+                  </p-select>
+                  @if (isPersonFieldInvalid(i, 'peopleId')) {
+                    <small class="error-text">Requerido</small>
+                  }
+                </div>
+
+                <div class="field">
+                  <label class="card-label">Rol</label>
+                  <p-select
+                    formControlName="rol"
+                    [options]="roleOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Rol"
+                    appendTo="body"
+                    styleClass="w-full">
+                  </p-select>
+                  @if (isPersonFieldInvalid(i, 'rol')) {
+                    <small class="error-text">Requerido</small>
+                  }
+                </div>
+
+                <button pButton type="button" severity="danger" [outlined]="true"
+                        icon="pi pi-trash" label="Quitar" (click)="removePerson(i)">
+                </button>
+
+              </div>
+            }
+          </div>
+
+          @if (peopleFormArray.length === 0) {
+            <p class="empty-hint">No hay personas asignadas. Usa el botón para añadir.</p>
+          }
+
+          <div class="dialog-footer-actions">
+            <button pButton type="button" [outlined]="true" icon="pi pi-plus"
+                    label="Agregar persona" (click)="addPerson()">
+            </button>
+            <button pButton type="button" icon="pi pi-check"
+                    label="Listo" (click)="showPeopleModal = false">
+            </button>
+          </div>
+        </p-dialog>
+
+        <!-- ══ MODAL: REPARTO ══ -->
+        <p-dialog header="Reparto de la película"
+                  [(visible)]="showActorsModal"
+                  [modal]="true" [draggable]="false" [resizable]="false"
+                  [style]="{width: '780px', maxWidth: '95vw'}"
+                  appendTo="body">
+
+          <div formArrayName="actors" class="dynamic-list">
+            @for (actor of actorsFormArray.controls; track $index; let i = $index) {
+              <div [formGroupName]="i" class="dynamic-card">
+
+                <div class="field">
+                  <label class="card-label">Actor</label>
+                  <p-select
+                    formControlName="actorId"
+                    [options]="actorSelectOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Seleccionar actor"
+                    appendTo="body"
+                    styleClass="w-full">
+                  </p-select>
+                  @if (isActorFieldInvalid(i, 'actorId')) {
+                    <small class="error-text">Requerido</small>
+                  }
+                </div>
+
+                @if (getActorImage(i)) {
+                  <div class="actor-preview">
+                    <img [src]="getActorImage(i)!" alt="Actor" class="actor-thumb" />
+                  </div>
+                }
+
+                <div class="field">
+                  <label class="card-label">Personaje *</label>
+                  <input pInputText formControlName="characterName"
+                         placeholder="Nombre del personaje" class="w-full" />
+                  @if (isActorFieldInvalid(i, 'characterName')) {
+                    <small class="error-text">El nombre del personaje es requerido</small>
+                  }
+                </div>
+
+                <button pButton type="button" severity="danger" [outlined]="true"
+                        icon="pi pi-trash" label="Quitar" (click)="removeActor(i)">
+                </button>
+
+              </div>
+            }
+          </div>
+
+          @if (actorsFormArray.length === 0) {
+            <p class="empty-hint">No hay actores asignados. Usa el botón para añadir.</p>
+          }
+
+          <div class="dialog-footer-actions">
+            <button pButton type="button" [outlined]="true" icon="pi pi-plus"
+                    label="Agregar actor" (click)="addActor()">
+            </button>
+            <button pButton type="button" icon="pi pi-check"
+                    label="Listo" (click)="showActorsModal = false">
+            </button>
+          </div>
+        </p-dialog>
+
+      </form>
+    }
+  </app-shared-card>
+
+  <!-- ── CATÁLOGO ── -->
+  <app-shared-card title="Catálogo de películas" [footer]="'Películas registradas.'">
+
+    <!-- Filtros -->
+    <div class="filter-bar">
+      <div class="filter-field">
+        <div class="search-wrap">
+          <i class="pi pi-search"></i>
+          <input pInputText [(ngModel)]="filterTitle" placeholder="Buscar por título..."
+                 class="w-full" (keydown.enter)="applyFilters()" />
+        </div>
+      </div>
+      <div class="filter-field">
+        <p-select
+          [(ngModel)]="filterCategoryId"
+          [options]="categoryOptions"
+          optionLabel="label" optionValue="value"
+          placeholder="Categoría"
+          appendTo="body"
+          [showClear]="true"
+          styleClass="w-full">
+        </p-select>
+      </div>
+      <div class="filter-field">
+        <p-select
+          [(ngModel)]="filterClassificationId"
+          [options]="classificationOptionsUS"
+          optionLabel="label" optionValue="value"
+          placeholder="Clasificación"
+          appendTo="body"
+          [showClear]="true"
+          styleClass="w-full">
+        </p-select>
+      </div>
+      <div class="filter-actions">
+        <button pButton type="button" icon="pi pi-search" label="Buscar"
+                (click)="applyFilters()">
+        </button>
+        @if (hasActiveFilters) {
+          <button pButton type="button" [outlined]="true" icon="pi pi-times" label="Limpiar"
+                  (click)="clearFilters()">
+          </button>
+        }
+      </div>
     </div>
-  </p-card>
+
+    <div class="table-wrapper">
+      <table class="movies-table">
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Duración</th>
+            <th>Estreno</th>
+            <th>Clasificaciones</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (movie of movies; track movie.id) {
+            <tr>
+              <td>{{ movie.title }}</td>
+              <td>{{ movie.duration }} min</td>
+              <td>{{ movie.releaseDate }}</td>
+              <td>{{ getClassificationsText(movie) }}</td>
+              <td>
+                <button pButton type="button" icon="pi pi-pencil" [outlined]="true"
+                        size="small" (click)="openEditDrawer(movie)">
+                </button>
+              </td>
+            </tr>
+          }
+          @if (movies.length === 0) {
+            <tr>
+              <td colspan="4" class="empty-row">No hay películas para el país seleccionado.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </app-shared-card>
+
 </div>
+
+<!-- ══ EDIT DRAWER ══════════════════════════════════════════════════════════ -->
+<p-drawer
+  [(visible)]="showEditDrawer"
+  position="right"
+  [style]="{ width: '75vw', maxWidth: '920px' }"
+  header="Editar película"
+  [blockScroll]="true">
+
+  @if (editLoading) {
+    <div class="spinner-center">
+      <p-progressSpinner strokeWidth="4" styleClass="w-8 h-8" />
+    </div>
+  } @else {
+
+    <p-tabs scrollable [(value)]="editActiveTab">
+      <p-tablist>
+        <p-tab value="0">Información</p-tab>
+        <p-tab value="1">Clasificaciones</p-tab>
+        <p-tab value="2">Categorías</p-tab>
+        <p-tab value="3">Pósters</p-tab>
+        <p-tab value="4">Equipo</p-tab>
+        <p-tab value="5">Reparto</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+
+        <!-- ─── TAB 0: INFORMACIÓN BÁSICA ─── -->
+        <p-tabpanel value="0">
+          <form [formGroup]="editBasicForm" class="edit-tab-form">
+            <div class="form-grid">
+
+              <div class="field">
+                <label>Título *</label>
+                <input pInputText formControlName="title" class="w-full" />
+                @if (isEditFieldInvalid('title')) {
+                  <small class="error-text">Requerido (2–75 caracteres)</small>
+                }
+              </div>
+
+              <div class="field">
+                <label>Idioma original *</label>
+                <input pInputText formControlName="originalLanguage" class="w-full" />
+                @if (isEditFieldInvalid('originalLanguage')) {
+                  <small class="error-text">Requerido</small>
+                }
+              </div>
+
+              <div class="field">
+                <label>Duración (min) *</label>
+                <p-inputnumber formControlName="duration" [min]="1" styleClass="w-full" />
+                @if (isEditFieldInvalid('duration')) {
+                  <small class="error-text">Requerido (mínimo 1)</small>
+                }
+              </div>
+
+              <div class="field">
+                <label>Fecha de estreno</label>
+                <p-datepicker formControlName="releaseDate" dateFormat="dd/mm/yy"
+                              appendTo="body" styleClass="w-full" />
+                <small class="section-hint">Solo fechas futuras. Deja vacío para no cambiar.</small>
+              </div>
+
+              <div class="field field-full">
+                <label>Sinopsis *</label>
+                <textarea pTextarea formControlName="synopsis" rows="4" class="w-full"></textarea>
+                @if (isEditFieldInvalid('synopsis')) {
+                  <small class="error-text">Requerida (2–255 caracteres)</small>
+                }
+              </div>
+
+              <div class="field field-full">
+                <label>Enlace del tráiler</label>
+                <input pInputText formControlName="trailerLink"
+                       placeholder="https://www.youtube.com/watch?v=..." class="w-full" />
+              </div>
+
+              @if (editTrailerEmbedUrl) {
+                <div class="field field-full">
+                  <label class="trailer-preview-label">
+                    <i class="pi pi-play-circle"></i> Vista previa del tráiler actual
+                  </label>
+                  <div class="trailer-preview">
+                    <iframe
+                      [src]="editTrailerEmbedUrl"
+                      frameborder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowfullscreen>
+                    </iframe>
+                  </div>
+                </div>
+              }
+
+              <div class="field toggle-field">
+                <label>Permitir comentarios</label>
+                <p-toggleswitch formControlName="allowComments" />
+              </div>
+
+              <div class="field toggle-field">
+                <label>Permitir calificaciones</label>
+                <p-toggleswitch formControlName="allowRatings" />
+              </div>
+
+            </div>
+
+            <div class="edit-tab-actions">
+              <button pButton type="button" label="Guardar cambios" icon="pi pi-save"
+                      [loading]="submittingBasicInfo" (click)="saveBasicInfo()">
+              </button>
+            </div>
+          </form>
+        </p-tabpanel>
+
+        <!-- ─── TAB 1: CLASIFICACIONES (solo US) ─── -->
+        <p-tabpanel value="1">
+          <div class="edit-tab-content">
+            @if (editClassForCountry(countries[0].id); as info) {
+              <div class="class-info-card">
+                <div class="class-info-left">
+                  <span class="class-name">{{ info.classificationName }}</span>
+                  <span class="class-age">{{ info.ageLimit }}+</span>
+                  <p-tag [value]="info.active ? 'Activa' : 'Inactiva'"
+                         [severity]="info.active ? 'success' : 'secondary'" />
+                </div>
+                <div class="class-info-actions">
+                  <button pButton type="button" [outlined]="true" size="small"
+                          [icon]="info.active ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                          [label]="info.active ? 'Desactivar' : 'Activar'"
+                          (click)="editToggleClassification(info.movieCountryInfoId)">
+                  </button>
+                  <button pButton type="button" severity="danger" [outlined]="true" size="small"
+                          icon="pi pi-trash" label="Quitar"
+                          (click)="editRemoveClassification(info.movieCountryInfoId)">
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <p class="empty-hint">No hay clasificación asignada.</p>
+              <div class="add-inline" style="margin-top: 0.75rem">
+                <p-select
+                  [formControl]="editAddClassUSCtrl"
+                  [options]="classificationOptionsUS"
+                  optionLabel="label" optionValue="value"
+                  placeholder="Seleccionar clasificación"
+                  appendTo="body" styleClass="flex-1">
+                </p-select>
+                <button pButton type="button" icon="pi pi-plus" label="Agregar"
+                        [disabled]="!editAddClassUSCtrl.value"
+                        [loading]="submittingEditSection"
+                        (click)="editAddClassification(editAddClassUSCtrl, countries[0].id)">
+                </button>
+              </div>
+            }
+          </div>
+        </p-tabpanel>
+
+        <!-- ─── TAB 2: CATEGORÍAS ─── -->
+        <p-tabpanel value="2">
+          <div class="edit-tab-content">
+
+            @if (editCategories.length > 0) {
+              <div class="cat-chips-header">
+                <span class="cat-chips-count">{{ editCategories.length }} categoría(s) asignada(s)</span>
+              </div>
+              <div class="cat-chips">
+                @for (cat of editCategories; track cat.id) {
+                  <span class="cat-chip">
+                    <i class="pi pi-tag cat-chip-icon"></i>
+                    {{ cat.name }}
+                    <button type="button" class="cat-chip-remove"
+                            title="Quitar categoría"
+                            (click)="editRemoveCategory(cat.id)">
+                      <i class="pi pi-times"></i>
+                    </button>
+                  </span>
+                }
+              </div>
+            } @else {
+              <div class="cat-empty">
+                <i class="pi pi-tag cat-empty-icon"></i>
+                <p>Sin categorías asignadas.</p>
+              </div>
+            }
+
+            <div class="add-cat-section">
+              <span class="add-cat-label">Agregar categoría</span>
+              <div class="add-inline">
+                <p-select
+                  [formControl]="editAddCategoryCtrl"
+                  [options]="editAvailableCategoryOptions"
+                  optionLabel="label" optionValue="value"
+                  placeholder="Seleccionar..."
+                  appendTo="body" styleClass="flex-1"
+                  [emptyMessage]="'Todas las categorías ya están asignadas'">
+                </p-select>
+                <button pButton type="button" icon="pi pi-plus" label="Agregar"
+                        [disabled]="!editAddCategoryCtrl.value"
+                        [loading]="submittingEditSection"
+                        (click)="editAddCategory()">
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </p-tabpanel>
+
+        <!-- ─── TAB 3: PÓSTERS ─── -->
+        <p-tabpanel value="3">
+          <div class="edit-tab-content">
+
+            <div class="poster-grid">
+              @for (poster of editPosters; track poster.id) {
+                <div class="poster-card" [class.poster-main]="poster.main">
+                  <div class="poster-img-wrap">
+                    <img [src]="poster.urlImage" alt="Póster" class="poster-thumb" />
+                    @if (poster.main) {
+                      <span class="poster-main-badge">Principal</span>
+                    }
+                  </div>
+                  <div class="poster-actions">
+                    @if (!poster.main) {
+                      <button pButton type="button" [outlined]="true" size="small"
+                              icon="pi pi-star" label="Principal"
+                              (click)="editSetMainPoster(poster.id)">
+                      </button>
+                    }
+                    <button pButton type="button" severity="danger" [outlined]="true" size="small"
+                            icon="pi pi-trash" (click)="editDeletePoster(poster.id)">
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+
+            @if (editPosters.length === 0) {
+              <p class="empty-hint">Sin pósters. Agrega uno abajo.</p>
+            }
+
+            <div class="add-poster-form">
+              <h5 class="add-section-title">Nuevo póster</h5>
+              <div class="add-poster-row">
+                <div class="field" style="flex:1; min-width: 200px">
+                  <input pInputText [(ngModel)]="editAddPosterUrl"
+                         placeholder="https://imagen.com/poster.jpg" class="w-full" />
+                </div>
+                <label class="checkbox-inline">
+                  <input type="checkbox" [(ngModel)]="editAddPosterIsMain" />
+                  <span>Principal</span>
+                </label>
+                <button pButton type="button" icon="pi pi-plus" label="Agregar"
+                        [disabled]="!editAddPosterUrl.trim()"
+                        [loading]="submittingEditSection"
+                        (click)="editAddPoster()">
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </p-tabpanel>
+
+        <!-- ─── TAB 4: EQUIPO ─── -->
+        <p-tabpanel value="4">
+          <div class="edit-tab-content">
+
+            <div class="edit-list">
+              @for (person of editPeople; track person.moviePeopleId) {
+                <div class="edit-list-row">
+                  <span class="edit-list-name">{{ person.peopleName }}</span>
+                  <p-select
+                    [options]="roleOptions"
+                    optionLabel="label" optionValue="value"
+                    [ngModel]="editPeopleRols[person.moviePeopleId]"
+                    (onChange)="editPeopleRols[person.moviePeopleId] = $event.value"
+                    appendTo="body"
+                    styleClass="edit-rol-select">
+                  </p-select>
+                  <button pButton type="button" [outlined]="true" size="small"
+                          icon="pi pi-save" title="Guardar rol"
+                          (click)="editUpdatePersonRol(person.moviePeopleId)">
+                  </button>
+                  <button pButton type="button" severity="danger" [outlined]="true" size="small"
+                          icon="pi pi-trash"
+                          (click)="editRemovePerson(person.moviePeopleId)">
+                  </button>
+                </div>
+              }
+              @if (editPeople.length === 0) {
+                <p class="empty-hint">Sin equipo asignado.</p>
+              }
+            </div>
+
+            <div class="add-inline add-inline-wrap" style="margin-top: 1rem">
+              <p-select
+                [formControl]="editAddPersonCtrl"
+                [options]="peopleSelectOptions"
+                optionLabel="label" optionValue="value"
+                placeholder="Persona"
+                appendTo="body" styleClass="flex-1">
+              </p-select>
+              <p-select
+                [formControl]="editAddPersonRolCtrl"
+                [options]="roleOptions"
+                optionLabel="label" optionValue="value"
+                placeholder="Rol"
+                appendTo="body" styleClass="flex-1">
+              </p-select>
+              <button pButton type="button" icon="pi pi-plus" label="Agregar"
+                      [disabled]="!editAddPersonCtrl.value || !editAddPersonRolCtrl.value"
+                      [loading]="submittingEditSection"
+                      (click)="editAddPerson()">
+              </button>
+            </div>
+
+          </div>
+        </p-tabpanel>
+
+        <!-- ─── TAB 5: REPARTO ─── -->
+        <p-tabpanel value="5">
+          <div class="edit-tab-content">
+
+            <div class="edit-list">
+              @for (item of editCast; track item.castId) {
+                <div class="edit-list-row">
+                  @if (item.actorUrlImage) {
+                    <img [src]="item.actorUrlImage" [alt]="item.actorName" class="actor-thumb-sm" />
+                  }
+                  <span class="edit-list-name">{{ item.actorName }}</span>
+                  <input pInputText
+                         [ngModel]="editCastChars[item.castId]"
+                         (ngModelChange)="editCastChars[item.castId] = $event"
+                         placeholder="Personaje"
+                         class="edit-char-input" />
+                  <button pButton type="button" [outlined]="true" size="small"
+                          icon="pi pi-save" title="Guardar personaje"
+                          (click)="editUpdateCharacterName(item.castId)">
+                  </button>
+                  <button pButton type="button" severity="danger" [outlined]="true" size="small"
+                          icon="pi pi-trash"
+                          (click)="editRemoveActor(item.castId)">
+                  </button>
+                </div>
+              }
+              @if (editCast.length === 0) {
+                <p class="empty-hint">Sin reparto asignado.</p>
+              }
+            </div>
+
+            <div class="add-inline add-inline-wrap" style="margin-top: 1rem">
+              <p-select
+                [formControl]="editAddActorCtrl"
+                [options]="editAvailableActorOptions"
+                optionLabel="label" optionValue="value"
+                placeholder="Actor"
+                appendTo="body" styleClass="flex-1">
+              </p-select>
+              <input pInputText [(ngModel)]="editAddCharacterName"
+                     placeholder="Nombre del personaje" class="flex-1" />
+              <button pButton type="button" icon="pi pi-plus" label="Agregar"
+                      [disabled]="!editAddActorCtrl.value || !editAddCharacterName.trim()"
+                      [loading]="submittingEditSection"
+                      (click)="editAddActor()">
+              </button>
+            </div>
+
+          </div>
+        </p-tabpanel>
+
+      </p-tabpanels>
+    </p-tabs>
+
+  }
+</p-drawer>
