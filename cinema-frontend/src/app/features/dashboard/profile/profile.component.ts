@@ -1,5 +1,6 @@
 ﻿import { Component, OnInit } from '@angular/core';
-import { AuthService, MeResponse } from '../../../core/services/auth.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { UserProfileResponse, UsersApiService } from '../../../core/services/users-api.service';
 import { SharedModule } from '../../../shared/shared.module';
 
 @Component({
@@ -11,22 +12,23 @@ import { SharedModule } from '../../../shared/shared.module';
 })
 export class ProfileComponent implements OnInit {
   loadingPassword = false;
-  profile: MeResponse | null = null;
+  loadingProfile = false;
+  profile: UserProfileResponse | null = null;
+  profileError = '';
   passwordError = '';
   passwordSuccess = '';
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersApiService: UsersApiService
+  ) {}
 
   ngOnInit(): void {
-    this.authService.getMe().subscribe({
-      next: (me) => {
-        this.profile = me;
-      }
-    });
+    this.loadProfile();
   }
 
   requestPasswordChange(): void {
-    const email = this.profile?.email?.trim() ?? '';
+    const email = (this.profile?.email?.trim() || this.authService.getCurrentUser()?.email || '').trim();
     this.passwordError = '';
     this.passwordSuccess = '';
 
@@ -47,4 +49,20 @@ export class ProfileComponent implements OnInit {
       }
     });
   }
+
+  private loadProfile(): void {
+    this.loadingProfile = true;
+    this.profileError = '';
+    this.usersApiService.getProfile().subscribe({
+      next: (profile) => {
+        this.loadingProfile = false;
+        this.profile = profile;
+      },
+      error: () => {
+        this.loadingProfile = false;
+        this.profileError = 'No se pudo cargar el perfil.';
+      }
+    });
+  }
 }
+

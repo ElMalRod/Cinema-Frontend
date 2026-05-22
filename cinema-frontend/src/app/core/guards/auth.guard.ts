@@ -1,4 +1,4 @@
-﻿import { Injectable, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { CanActivate, Router, UrlTree } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
@@ -8,6 +8,6 @@ export class AuthGuard implements CanActivate {
   private readonly router = inject(Router);
 
   canActivate(): boolean | UrlTree {
-    return this.authService.isAuthenticated() || this.router.parseUrl('/login');
+    return this.authService.hasValidSession() || this.router.parseUrl('/login');
   }
 }

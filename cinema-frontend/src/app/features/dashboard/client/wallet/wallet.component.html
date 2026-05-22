@@ -1,13 +1,54 @@
 ﻿<div class="page-wrapper">
-  <p-card styleClass="page-card">
-    <ng-template pTemplate="header">
-      <div class="page-header">
-        <h1 class="page-title">{{ title }}</h1>
-        <p class="page-subtitle">{{ subtitle }}</p>
+  <app-shared-card [title]="title" [footer]="subtitle">
+    @if (loading) {
+      <p>Cargando wallet...</p>
+    } @else {
+      <div class="balance-box">
+        <span class="balance-label">Saldo actual</span>
+        <strong class="balance-value">{{ formatAmount(balance) }}</strong>
       </div>
-    </ng-template>
-    <div class="page-content">
-      <p-progressSpinner *ngIf="false"/>
-    </div>
-  </p-card>
+
+      <app-shared-form
+        [fields]="rechargeFields"
+        submitLabel="Recargar"
+        [loading]="recharging"
+        (onSubmit)="recharge($event)"></app-shared-form>
+
+      @if (errorMessage) {
+        <p class="message error">{{ errorMessage }}</p>
+      }
+      @if (successMessage) {
+        <p class="message success">{{ successMessage }}</p>
+      }
+
+      <div class="table-wrapper">
+        <table class="wallet-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th>Descripción</th>
+              <th>Monto</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (tx of transactions; track tx.transactionDate + tx.type + tx.amount) {
+              <tr>
+                <td>{{ tx.transactionDate | date: 'short' }}</td>
+                <td>{{ tx.type }}</td>
+                <td>{{ tx.description || '-' }}</td>
+                <td>{{ formatAmount(tx.amount) }}</td>
+              </tr>
+            }
+            @if (transactions.length === 0) {
+              <tr>
+                <td colspan="4" class="empty-row">Sin transacciones todavía.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </app-shared-card>
 </div>
+

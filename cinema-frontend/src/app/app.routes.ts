@@ -1,4 +1,4 @@
-﻿import { Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
 import { GuestGuard } from './core/guards/guest.guard';
 import { RoleGuard } from './core/guards/role.guard';
@@ -102,6 +102,12 @@ export const routes: Routes = [
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['ADVERTISER'] },
     loadComponent: () => import('./features/dashboard/advertiser/wallet/wallet.component').then((m) => m.AdvertiserWalletComponent)
+  },
+  {
+    path: 'dashboard/admin/users',
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['SYSTEM_ADMIN'] },
+    loadComponent: () => import('./features/dashboard/admin/users/users.component').then((m) => m.AdminUsersComponent)
   },
   {
     path: 'dashboard/admin/movies',
