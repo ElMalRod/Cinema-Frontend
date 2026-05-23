@@ -1,0 +1,122 @@
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, forkJoin, map } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import {
+  CompanyOption,
+  CinemaSummary,
+  TheaterInfo,
+  TheaterComment,
+  TheaterRatingSummary,
+  ShowtimeInfo
+} from '../models/cinema.model';
+
+/* ── Raw backend response types ─────────────────────────────────────────── */
+
+interface TheaterRaw {
+  id: string;
+  typeTheaterId: string;
+  typeTheaterName: string;
+  name: string;
+  rows: number;
+  cols: number;
+  visible: boolean;
+  allowComments: boolean;
+  allowRatings: boolean;
+}
+
+interface TheaterClientRaw {
+  id: string;
+  typeTheaterName: string;
+  name: string;
+  rows: number;
+  cols: number;
+  showtimes: ShowtimeInfo[];
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+@Injectable({ providedIn: 'root' })
+export class CinemaApiService {
+  private readonly base = `${environment.apiBaseUrl}/cinemas/v1`;
+
+  constructor(private readonly http: HttpClient) {}
+
+  // ── Empresas ───────────────────────────────────────────────────────────────
+
+  getCompanies(): Observable<CompanyOption[]> {
+    return this.http.get<CompanyOption[]>(`${this.base}/cinemas/companies`);
+  }
+
+  // ── Cines ──────────────────────────────────────────────────────────────────
+
+  getCinemas(): Observable<CinemaSummary[]> {
+    return this.http.get<CinemaSummary[]>(`${this.base}/cinemas`);
+  }
+
+  // ── Salas ──────────────────────────────────────────────────────────────────
+
+  /**
+   * Devuelve salas del cine que están programadas para la película dada.
+   * Hace dos llamadas en paralelo y las combina por ID.
+   */
+  getTheatersByCinemaAndMovie(cinemaId: string, movieId: string): Observable<TheaterInfo[]> {
+    const params = new HttpParams().set('cinemaId', cinemaId);
+    const movieParams = new HttpParams().set('movieId', movieId);
+
+    return forkJoin({
+      cinemaTheaters: this.http.get<TheaterRaw[]>(`${this.base}/theaters`, { params }),
+      movieTheaters: this.http.get<TheaterClientRaw[]>(`${this.base}/theaters/movie`, { params: movieParams })
+    }).pipe(
+      map(({ cinemaTheaters, movieTheaters }) => {
+        const movieMap = new Map(movieTheaters.map(t => [t.id, t.showtimes]));
+        return cinemaTheaters
+          .filter(t => t.visible)
+          .map(t => ({
+            id: t.id,
+            typeTheaterName: t.typeTheaterName,
+            name: t.name,
+            rows: t.rows,
+            cols: t.cols,
+            visible: t.visible,
+            allowComments: t.allowComments,
+            allowRatings: t.allowRatings,
+            showtimes: movieMap.get(t.id) ?? []
+          }));
+      })
+    );
+  }
+
+  // ── Comentarios de sala ────────────────────────────────────────────────────
+
+  getTheaterComments(theaterId: string): Observable<TheaterComment[]> {
+    return this.http.get<TheaterComment[]>(`${this.base}/theaters/${theaterId}/comments`);
+  }
+
+  createTheaterComment(theaterId: string, userId: string, content: string): Observable<TheaterComment> {
+    return this.http.post<TheaterComment>(`${this.base}/theaters/${theaterId}/comments`, { userId, content });
+  }
+
+  updateTheaterComment(commentId: string, userId: string, content: string): Observable<void> {
+    return this.http.patch<void>(`${this.base}/comments/${commentId}`, { userId, content });
+  }
+
+  deleteTheaterComment(commentId: string, userId: string): Observable<void> {
+    const params = new HttpParams().set('userId', userId);
+    return this.http.delete<void>(`${this.base}/comments/${commentId}`, { params });
+  }
+
+  // ── Calificaciones de sala ─────────────────────────────────────────────────
+
+  getTheaterRatings(theaterId: string): Observable<TheaterRatingSummary> {
+    return this.http.get<TheaterRatingSummary>(`${this.base}/theaters/${theaterId}/ratings`);
+  }
+
+  createTheaterRating(theaterId: string, userId: string, score: number): Observable<TheaterRatingSummary> {
+    return this.http.post<TheaterRatingSummary>(`${this.base}/theaters/${theaterId}/ratings`, { userId, score });
+  }
+
+  updateTheaterRating(ratingId: string, userId: string, score: number): Observable<TheaterRatingSummary> {
+    return this.http.patch<TheaterRatingSummary>(`${this.base}/ratings/${ratingId}`, { userId, score });
+  }
+}

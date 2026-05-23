@@ -110,20 +110,11 @@
     <div class="modal-spinner"><p-progressSpinner strokeWidth="4" /></div>
   } @else if (selectedMovie) {
 
-    <!-- ── 2 columnas: info + ratings ──────────────────────── -->
+    <!-- ── 2 columnas: info + (poster + ratings) ──────────────── -->
     <div class="detail-layout">
 
-      <!-- columna izquierda -->
+      <!-- columna izquierda: información -->
       <div class="detail-info">
-
-        <!-- póster -->
-        <div class="detail-poster">
-          @if (mainPoster) {
-            <img [src]="mainPoster" [alt]="selectedMovie.title" />
-          } @else {
-            <div class="poster-placeholder large"><i class="pi pi-image"></i></div>
-          }
-        </div>
 
         <!-- título -->
         <h2 class="detail-title">{{ selectedMovie.title }}</h2>
@@ -203,14 +194,61 @@
                 allowfullscreen
               ></iframe>
             </div>
+            @if (isAuthenticated) {
+              <div class="showtimes-cta">
+                <p-button
+                  label="Ver Funciones"
+                  icon="pi pi-ticket"
+                  severity="success"
+                  (onClick)="goToShowtimes()"
+                />
+                <span class="cta-hint">Consulta cines y horarios disponibles</span>
+              </div>
+            }
+          </div>
+        } @else if (isAuthenticated) {
+          <div class="showtimes-cta">
+            <p-button
+              label="Ver Funciones"
+              icon="pi pi-ticket"
+              severity="success"
+              (onClick)="goToShowtimes()"
+            />
+            <span class="cta-hint">Consulta cines y horarios disponibles</span>
           </div>
         }
 
       </div>
 
-      <!-- columna derecha -->
-      <div class="detail-ratings">
+      <!-- columna derecha: poster slideshow + ratings -->
+      <div class="detail-right-col">
 
+        <!-- poster slideshow -->
+        <div class="poster-slideshow">
+          @if (currentPosterUrl) {
+            <img [src]="currentPosterUrl" [alt]="selectedMovie.title" />
+          } @else {
+            <div class="poster-placeholder large"><i class="pi pi-image"></i></div>
+          }
+          @if (posters.length > 1) {
+            <div class="poster-nav">
+              <button class="poster-nav-btn" (click)="prevPoster()">
+                <i class="pi pi-chevron-left"></i>
+              </button>
+              <div class="poster-dots">
+                @for (p of posters; track p.id; let i = $index) {
+                  <span class="poster-dot" [class.active]="i === posterIndex" (click)="posterIndex = i"></span>
+                }
+              </div>
+              <button class="poster-nav-btn" (click)="nextPoster()">
+                <i class="pi pi-chevron-right"></i>
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- ratings -->
+        <div class="detail-ratings">
         <h3 class="section-title"><i class="pi pi-star"></i> Calificaciones</h3>
 
         <!-- promedio -->
@@ -287,8 +325,9 @@
           </div>
         }
 
-      </div>
-    </div>
+        </div><!-- /detail-ratings -->
+      </div><!-- /detail-right-col -->
+    </div><!-- /detail-layout -->
 
     <!-- ── Comentarios ────────────────────────────────────────── -->
     <div class="comments-section">
