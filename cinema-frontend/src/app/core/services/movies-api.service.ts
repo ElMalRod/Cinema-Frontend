@@ -62,12 +62,83 @@ export class MoviesApiService {
     return this.http.get<PeopleOption[]>(`${this.base}/people`);
   }
 
+  createPerson(name: string): Observable<PeopleOption> {
+    return this.http.post<PeopleOption>(`${this.base}/people`, { name });
+  }
+
+  updatePerson(id: string, name: string): Observable<PeopleOption> {
+    return this.http.patch<PeopleOption>(`${this.base}/people/${id}`, { name });
+  }
+
+  togglePerson(id: string): Observable<PeopleOption> {
+    return this.http.patch<PeopleOption>(`${this.base}/people/${id}/toggle`, {});
+  }
+
   getActors(): Observable<ActorOption[]> {
     return this.http.get<ActorOption[]>(`${this.base}/actors`);
   }
 
+  createActor(name: string, urlImage: string | null): Observable<ActorOption> {
+    return this.http.post<ActorOption>(`${this.base}/actors`, { name, urlImage });
+  }
+
+  updateActor(id: string, name: string, urlImage: string | null): Observable<ActorOption> {
+    return this.http.patch<ActorOption>(`${this.base}/actors/${id}`, { name, urlImage });
+  }
+
+  toggleActor(id: string): Observable<ActorOption> {
+    return this.http.patch<ActorOption>(`${this.base}/actors/${id}/toggle`, {});
+  }
+
   getCountries(): CountryOption[] {
     return STATIC_COUNTRIES;
+  }
+
+  // ──── ADMIN CATEGORIES ──────────────────────────────────────────────────────
+
+  adminGetAllCategories(): Observable<CategoryOption[]> {
+    return this.http.get<CategoryOption[]>(`${this.base}/categories/all`);
+  }
+
+  adminCreateCategory(name: string): Observable<CategoryOption> {
+    return this.http.post<CategoryOption>(`${this.base}/categories`, { name });
+  }
+
+  adminUpdateCategory(id: string, name: string): Observable<CategoryOption> {
+    return this.http.patch<CategoryOption>(`${this.base}/categories/${id}`, { name });
+  }
+
+  adminToggleCategory(id: string): Observable<CategoryOption> {
+    return this.http.patch<CategoryOption>(`${this.base}/categories/${id}/toggle`, {});
+  }
+
+  // ──── ADMIN CLASSIFICATIONS ─────────────────────────────────────────────────
+
+  createClassification(countryId: string, name: string, ageLimit: number): Observable<ClassificationOption> {
+    return this.http.post<ClassificationOption>(
+      `${this.base}/countries/${countryId}/classifications`,
+      { name, ageLimit }
+    );
+  }
+
+  updateClassification(countryId: string, classificationId: string, name: string, ageLimit: number): Observable<ClassificationOption> {
+    return this.http.patch<ClassificationOption>(
+      `${this.base}/countries/${countryId}/classifications/${classificationId}`,
+      { name, ageLimit }
+    );
+  }
+
+  adminGetAllClassifications(countryId: string): Observable<ClassificationOption[]> {
+    return this.http.get<ClassificationOption[]>(
+      `${this.base}/countries/${countryId}/classifications/all`
+    );
+  }
+
+  toggleClassification(countryId: string, classificationId: string): Observable<ClassificationOption> {
+    return this.http.patch<ClassificationOption>(
+      `${this.base}/countries/${countryId}/classifications/${classificationId}/toggle`,
+      {}
+    );
   }
 
   // ──── EDIT MOVIE ────────────────────────────────────────────────────────────

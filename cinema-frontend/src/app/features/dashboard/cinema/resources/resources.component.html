@@ -1,0 +1,419 @@
+<p-toast />
+
+<div class="resources-page">
+  <div class="resources-header">
+    <h2 class="resources-title">Gestión de Recursos</h2>
+    <p class="resources-subtitle">Administra actores, personas, categorías y clasificaciones</p>
+  </div>
+
+  <p-tabs [(value)]="activeTab">
+    <p-tablist>
+      <p-tab value="0">Actores</p-tab>
+      <p-tab value="1">Personas</p-tab>
+      <p-tab value="2">Categorías</p-tab>
+      <p-tab value="3">Clasificaciones</p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+
+      <!-- ═══════════════════════════ ACTORES ═══════════════════════════════ -->
+      <p-tabpanel value="0">
+        <div class="tab-actions">
+          <p-button
+            label="Nuevo Actor"
+            icon="pi pi-plus"
+            severity="primary"
+            (onClick)="openActorDialog()" />
+        </div>
+
+        @if (loadingActors) {
+          <div class="loading-container">
+            <p-progressSpinner strokeWidth="4" />
+          </div>
+        } @else {
+          <p-table
+            [value]="actors"
+            [paginator]="actors.length > 10"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [globalFilterFields]="['name']"
+            responsiveLayout="scroll"
+            styleClass="p-datatable-sm p-datatable-gridlines">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Nombre</th>
+                <th style="width: 120px">Imagen</th>
+                <th style="width: 100px; text-align: center">Estado</th>
+                <th style="width: 130px; text-align: center">Acciones</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-actor>
+              <tr>
+                <td>{{ actor.name }}</td>
+                <td>
+                  @if (actor.urlImage) {
+                    <img [src]="actor.urlImage" alt="{{ actor.name }}" class="actor-thumb" />
+                  } @else {
+                    <span class="no-image">Sin imagen</span>
+                  }
+                </td>
+                <td style="text-align: center">
+                  <p-tag
+                    [value]="actor.active ? 'Activo' : 'Inactivo'"
+                    [severity]="actor.active ? 'success' : 'danger'" />
+                </td>
+                <td style="text-align: center">
+                  <p-button
+                    icon="pi pi-pencil"
+                    severity="secondary"
+                    [text]="true"
+                    [rounded]="true"
+                    pTooltip="Editar"
+                    (onClick)="openActorDialog(actor)" />
+                  <p-button
+                    [icon]="actor.active ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                    [severity]="actor.active ? 'warn' : 'success'"
+                    [text]="true"
+                    [rounded]="true"
+                    [pTooltip]="actor.active ? 'Desactivar' : 'Activar'"
+                    (onClick)="toggleActor(actor)" />
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" style="text-align: center; padding: 2rem">No hay actores registrados</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </p-tabpanel>
+
+      <!-- ═══════════════════════════ PERSONAS ═════════════════════════════ -->
+      <p-tabpanel value="1">
+        <div class="tab-actions">
+          <p-button
+            label="Nueva Persona"
+            icon="pi pi-plus"
+            severity="primary"
+            (onClick)="openPersonDialog()" />
+        </div>
+
+        @if (loadingPeople) {
+          <div class="loading-container">
+            <p-progressSpinner strokeWidth="4" />
+          </div>
+        } @else {
+          <p-table
+            [value]="people"
+            [paginator]="people.length > 10"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            responsiveLayout="scroll"
+            styleClass="p-datatable-sm p-datatable-gridlines">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Nombre</th>
+                <th style="width: 100px; text-align: center">Estado</th>
+                <th style="width: 130px; text-align: center">Acciones</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-person>
+              <tr>
+                <td>{{ person.name }}</td>
+                <td style="text-align: center">
+                  <p-tag
+                    [value]="person.active ? 'Activo' : 'Inactivo'"
+                    [severity]="person.active ? 'success' : 'danger'" />
+                </td>
+                <td style="text-align: center">
+                  <p-button
+                    icon="pi pi-pencil"
+                    severity="secondary"
+                    [text]="true"
+                    [rounded]="true"
+                    pTooltip="Editar"
+                    (onClick)="openPersonDialog(person)" />
+                  <p-button
+                    [icon]="person.active ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                    [severity]="person.active ? 'warn' : 'success'"
+                    [text]="true"
+                    [rounded]="true"
+                    [pTooltip]="person.active ? 'Desactivar' : 'Activar'"
+                    (onClick)="togglePerson(person)" />
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="3" style="text-align: center; padding: 2rem">No hay personas registradas</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </p-tabpanel>
+
+      <!-- ═══════════════════════════ CATEGORÍAS ═══════════════════════════ -->
+      <p-tabpanel value="2">
+        <div class="tab-actions">
+          <p-button
+            label="Nueva Categoría"
+            icon="pi pi-plus"
+            severity="primary"
+            (onClick)="openCategoryDialog()" />
+        </div>
+
+        @if (loadingCategories) {
+          <div class="loading-container">
+            <p-progressSpinner strokeWidth="4" />
+          </div>
+        } @else {
+          <p-table
+            [value]="categories"
+            [paginator]="categories.length > 10"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            responsiveLayout="scroll"
+            styleClass="p-datatable-sm p-datatable-gridlines">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Nombre</th>
+                <th style="width: 100px; text-align: center">Estado</th>
+                <th style="width: 130px; text-align: center">Acciones</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-category>
+              <tr>
+                <td>{{ category.name }}</td>
+                <td style="text-align: center">
+                  <p-tag
+                    [value]="category.active ? 'Activa' : 'Inactiva'"
+                    [severity]="category.active ? 'success' : 'danger'" />
+                </td>
+                <td style="text-align: center">
+                  <p-button
+                    icon="pi pi-pencil"
+                    severity="secondary"
+                    [text]="true"
+                    [rounded]="true"
+                    pTooltip="Editar"
+                    (onClick)="openCategoryDialog(category)" />
+                  <p-button
+                    [icon]="category.active ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                    [severity]="category.active ? 'warn' : 'success'"
+                    [text]="true"
+                    [rounded]="true"
+                    [pTooltip]="category.active ? 'Desactivar' : 'Activar'"
+                    (onClick)="toggleCategory(category)" />
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="3" style="text-align: center; padding: 2rem">No hay categorías registradas</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </p-tabpanel>
+
+      <!-- ═══════════════════════════ CLASIFICACIONES ══════════════════════ -->
+      <p-tabpanel value="3">
+        <div class="tab-actions">
+          <p-button
+            label="Nueva Clasificación"
+            icon="pi pi-plus"
+            severity="primary"
+            (onClick)="openClassificationDialog()" />
+        </div>
+
+        @if (loadingClassifications) {
+          <div class="loading-container">
+            <p-progressSpinner strokeWidth="4" />
+          </div>
+        } @else {
+          <p-table
+            [value]="classifications"
+            [paginator]="classifications.length > 10"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            responsiveLayout="scroll"
+            styleClass="p-datatable-sm p-datatable-gridlines">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Nombre</th>
+                <th style="width: 140px; text-align: center">Límite de edad</th>
+                <th style="width: 100px; text-align: center">Estado</th>
+                <th style="width: 130px; text-align: center">Acciones</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-classification>
+              <tr>
+                <td>{{ classification.name }}</td>
+                <td style="text-align: center">{{ classification.ageLimit }}+</td>
+                <td style="text-align: center">
+                  <p-tag
+                    [value]="classification.active ? 'Activa' : 'Inactiva'"
+                    [severity]="classification.active ? 'success' : 'danger'" />
+                </td>
+                <td style="text-align: center">
+                  <p-button
+                    icon="pi pi-pencil"
+                    severity="secondary"
+                    [text]="true"
+                    [rounded]="true"
+                    pTooltip="Editar"
+                    (onClick)="openClassificationDialog(classification)" />
+                  <p-button
+                    [icon]="classification.active ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                    [severity]="classification.active ? 'warn' : 'success'"
+                    [text]="true"
+                    [rounded]="true"
+                    [pTooltip]="classification.active ? 'Desactivar' : 'Activar'"
+                    (onClick)="toggleClassification(classification)" />
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" style="text-align: center; padding: 2rem">No hay clasificaciones registradas</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </p-tabpanel>
+
+    </p-tabpanels>
+  </p-tabs>
+</div>
+
+<!-- ═══════════════════════════ DIALOG: ACTOR ════════════════════════════ -->
+<p-dialog
+  [(visible)]="showActorDialog"
+  [header]="editingActorId ? 'Editar Actor' : 'Nuevo Actor'"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false">
+  <div class="dialog-form">
+    <div class="field">
+      <label for="actor-name">Nombre <span class="required">*</span></label>
+      <input
+        id="actor-name"
+        pInputText
+        [(ngModel)]="actorName"
+        placeholder="Nombre del actor"
+        class="w-full" />
+    </div>
+    <div class="field">
+      <label for="actor-url">URL de imagen</label>
+      <input
+        id="actor-url"
+        pInputText
+        [(ngModel)]="actorUrlImage"
+        placeholder="https://..."
+        class="w-full" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="showActorDialog = false" />
+    <p-button
+      [label]="editingActorId ? 'Guardar cambios' : 'Crear'"
+      [loading]="savingActor"
+      [disabled]="!actorName.trim()"
+      (onClick)="saveActor()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ═══════════════════════════ DIALOG: PERSONA ══════════════════════════ -->
+<p-dialog
+  [(visible)]="showPeopleDialog"
+  [header]="editingPersonId ? 'Editar Persona' : 'Nueva Persona'"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false">
+  <div class="dialog-form">
+    <div class="field">
+      <label for="person-name">Nombre <span class="required">*</span></label>
+      <input
+        id="person-name"
+        pInputText
+        [(ngModel)]="personName"
+        placeholder="Nombre completo"
+        class="w-full" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="showPeopleDialog = false" />
+    <p-button
+      [label]="editingPersonId ? 'Guardar cambios' : 'Crear'"
+      [loading]="savingPerson"
+      [disabled]="!personName.trim()"
+      (onClick)="savePerson()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ═══════════════════════════ DIALOG: CATEGORÍA ════════════════════════ -->
+<p-dialog
+  [(visible)]="showCategoryDialog"
+  [header]="editingCategoryId ? 'Editar Categoría' : 'Nueva Categoría'"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false">
+  <div class="dialog-form">
+    <div class="field">
+      <label for="category-name">Nombre <span class="required">*</span></label>
+      <input
+        id="category-name"
+        pInputText
+        [(ngModel)]="categoryName"
+        placeholder="Nombre de la categoría"
+        class="w-full" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="showCategoryDialog = false" />
+    <p-button
+      [label]="editingCategoryId ? 'Guardar cambios' : 'Crear'"
+      [loading]="savingCategory"
+      [disabled]="!categoryName.trim()"
+      (onClick)="saveCategory()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ═══════════════════════════ DIALOG: CLASIFICACIÓN ═══════════════════ -->
+<p-dialog
+  [(visible)]="showClassificationDialog"
+  [header]="editingClassificationId ? 'Editar Clasificación' : 'Nueva Clasificación'"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false">
+  <div class="dialog-form">
+    <div class="field">
+      <label for="classification-name">Nombre <span class="required">*</span></label>
+      <input
+        id="classification-name"
+        pInputText
+        [(ngModel)]="classificationName"
+        placeholder="Ej: PG-13, G, R"
+        class="w-full" />
+    </div>
+    <div class="field">
+      <label for="classification-age">Límite de edad <span class="required">*</span></label>
+      <p-inputNumber
+        inputId="classification-age"
+        [(ngModel)]="classificationAgeLimit"
+        [min]="0"
+        [max]="99"
+        placeholder="0"
+        styleClass="w-full" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="showClassificationDialog = false" />
+    <p-button
+      [label]="editingClassificationId ? 'Guardar cambios' : 'Crear'"
+      [loading]="savingClassification"
+      [disabled]="!classificationName.trim() || classificationAgeLimit === null"
+      (onClick)="saveClassification()" />
+  </ng-template>
+</p-dialog>

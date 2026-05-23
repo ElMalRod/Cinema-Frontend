@@ -11,9 +11,19 @@
       @for (link of publicLinks; track link.path) {
         <button pButton type="button" [label]="link.label" [icon]="link.icon" class="p-button-text nav-btn" [routerLink]="link.path"></button>
       }
-      @for (link of roleLinksCurrent; track link.path) {
-        <button pButton type="button" [label]="link.label" [icon]="link.icon" class="p-button-text nav-btn" [routerLink]="link.path"></button>
+      @for (link of roleLinksCurrent; track link.label) {
+        @if (link.items?.length) {
+          <button pButton type="button" [label]="link.label" [icon]="link.icon"
+                  class="p-button-text nav-btn"
+                  (click)="toggleMenu($event, getPrimeMenuItems(link.items), roleMenu)">
+          </button>
+        } @else {
+          <button pButton type="button" [label]="link.label" [icon]="link.icon"
+                  class="p-button-text nav-btn" [routerLink]="link.path">
+          </button>
+        }
       }
+      <p-menu #roleMenu [model]="activeMenuModel" [popup]="true" />
     </div>
   </ng-template>
 

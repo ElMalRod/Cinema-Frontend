@@ -18,6 +18,7 @@ export interface ClassificationOption {
   name: string;
   ageLimit: number;
   country: string;
+  active: boolean;
 }
 
 export interface CategoryOption {
@@ -29,12 +30,14 @@ export interface CategoryOption {
 export interface PeopleOption {
   id: string;
   name: string;
+  active: boolean;
 }
 
 export interface ActorOption {
   id: string;
   name: string;
   urlImage: string | null;
+  active: boolean;
 }
 
 export interface CountryOption {

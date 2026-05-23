@@ -92,6 +92,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/cinema/ads-block/ads-block.component').then((m) => m.AdsBlockComponent)
   },
   {
+    path: 'dashboard/cinema/resources',
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['CINEMA_ADMIN', 'SYSTEM_ADMIN'] },
+    loadComponent: () => import('./features/dashboard/cinema/resources/resources.component').then((m) => m.CinemaResourcesComponent)
+  },
+  {
     path: 'dashboard/advertiser/ads',
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['ADVERTISER'] },

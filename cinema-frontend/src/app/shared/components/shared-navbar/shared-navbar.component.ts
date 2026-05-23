@@ -53,7 +53,22 @@ export class SharedNavbarComponent implements OnInit {
     ],
     SYSTEM_ADMIN: [
       { label: 'Usuarios', path: '/dashboard/admin/users', icon: 'pi pi-users' },
-      { label: 'Películas', path: '/dashboard/admin/movies', icon: 'pi pi-video' },
+      {
+        label: 'Películas',
+        icon: 'pi pi-video',
+        items: [
+          {
+            label: 'Administrar Películas',
+            icon: 'pi pi-play-circle',
+            command: () => this.router.navigate(['/dashboard/admin/movies'])
+          },
+          {
+            label: 'Gestión Recursos',
+            icon: 'pi pi-database',
+            command: () => this.router.navigate(['/dashboard/cinema/resources'])
+          }
+        ]
+      },
       {
         label: 'Publicidad',
         icon: 'pi pi-megaphone',
@@ -101,7 +116,8 @@ export class SharedNavbarComponent implements OnInit {
     return items.map(item => ({
       label: item.label,
       icon: item.icon,
-      routerLink: item.path
+      routerLink: item.path,
+      command: item.command
     }));
   }
 

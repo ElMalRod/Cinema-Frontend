@@ -156,7 +156,7 @@ export class AdminMoviesComponent implements OnInit {
   }
 
   get classificationOptionsUS() {
-    return (this.classificationsByCountry[US_ID] ?? []).map(c => ({
+    return (this.classificationsByCountry[US_ID] ?? []).filter(c => c.active).map(c => ({
       label: `${c.name} (${c.ageLimit}+)`,
       value: c.id
     }));
@@ -173,11 +173,11 @@ export class AdminMoviesComponent implements OnInit {
   }
 
   get peopleSelectOptions() {
-    return this.peopleOptions.map(p => ({ label: p.name, value: p.id }));
+    return this.peopleOptions.filter(p => p.active).map(p => ({ label: p.name, value: p.id }));
   }
 
   get actorSelectOptions() {
-    return this.actorOptions.map(a => ({ label: a.name, value: a.id }));
+    return this.actorOptions.filter(a => a.active).map(a => ({ label: a.name, value: a.id }));
   }
 
   getActorImage(i: number): string | null {
@@ -362,7 +362,7 @@ export class AdminMoviesComponent implements OnInit {
   get editAvailableActorOptions() {
     const assignedIds = new Set(this.editCast.map(c => c.actorId));
     return this.actorOptions
-      .filter(a => !assignedIds.has(a.id))
+      .filter(a => a.active && !assignedIds.has(a.id))
       .map(a => ({ label: a.name, value: a.id }));
   }
 
