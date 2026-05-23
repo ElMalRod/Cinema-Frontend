@@ -10,9 +10,15 @@ export class SharedModalComponent {
   @Input() visible = false;
   @Input() width = '38rem';
 
+  @Output() visibleChange = new EventEmitter<boolean>();
   @Output() onClose = new EventEmitter<void>();
 
-  close(): void {
-    this.onClose.emit();
+  onVisibleChange(nextVisible: boolean): void {
+    this.visible = nextVisible;
+    this.visibleChange.emit(nextVisible);
+
+    if (!nextVisible) {
+      this.onClose.emit();
+    }
   }
 }

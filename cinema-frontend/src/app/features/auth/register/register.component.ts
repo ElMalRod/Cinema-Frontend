@@ -62,7 +62,7 @@ export class RegisterComponent {
 
   private resolveError(error: HttpErrorResponse): string {
     if (error.status === 403) {
-      return 'Solo se permite registro público para CLIENT y CINEMA_ADMIN.';
+      return 'Solo se permite registro publico para CLIENT y ADVERTISER.';
     }
     if (error.status === 409) {
       return 'El correo ya está registrado.';
@@ -73,4 +73,6 @@ export class RegisterComponent {
     return 'No se pudo registrar el usuario. Intenta de nuevo.';
   }
 }
+
+
 

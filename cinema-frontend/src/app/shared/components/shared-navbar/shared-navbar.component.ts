@@ -1,34 +1,26 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { MenuItem } from 'primeng/api';
 import { UserRole } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
-import { MenuItem } from 'primeng/api';
-
 
 interface NavLink {
   label: string;
   path?: string;
   icon: string;
-  items?: NavLink[];
-  command?: () => void;
+  items?: MenuItem[];
 }
 
 @Component({
   selector: 'app-shared-navbar',
-  standalone: false, // Recuerda importar MenuModule en tu SharedModule
+  standalone: false,
   templateUrl: './shared-navbar.component.html',
   styleUrl: './shared-navbar.component.scss'
 })
 export class SharedNavbarComponent implements OnInit {
-  activeMenuModel: MenuItem[] = [];
-  toggleMenu(event: Event, items: MenuItem[] | undefined, menu: any): void {
-    if (items) {
-      this.activeMenuModel = items;
-      menu.toggle(event);
-      event.stopPropagation(); // Evitamos que el evento de clic rebote en el navegador
-    }
-  }
   isAuthenticated = false;
+  currentRole: UserRole | null = null;
+  roleLinksCurrent: NavLink[] = [];
 
   readonly publicLinks: NavLink[] = [
     { label: 'Inicio', path: '/', icon: 'pi pi-home' },
@@ -53,44 +45,21 @@ export class SharedNavbarComponent implements OnInit {
     ],
     SYSTEM_ADMIN: [
       { label: 'Usuarios', path: '/dashboard/admin/users', icon: 'pi pi-users' },
+      { label: 'Empresas y sucursales', path: '/dashboard/admin/users', icon: 'pi pi-building' },
       {
         label: 'Películas',
         icon: 'pi pi-video',
         items: [
-          {
-            label: 'Administrar Películas',
-            icon: 'pi pi-play-circle',
-            command: () => this.router.navigate(['/dashboard/admin/movies'])
-          },
-          {
-            label: 'Gestión Recursos',
-            icon: 'pi pi-database',
-            command: () => this.router.navigate(['/dashboard/cinema/resources'])
-          }
+          { label: 'Administrar Películas', icon: 'pi pi-play-circle', command: () => this.router.navigate(['/dashboard/admin/movies']) },
+          { label: 'Gestión Recursos', icon: 'pi pi-database', command: () => this.router.navigate(['/dashboard/cinema/resources']) }
         ]
       },
-      {
-        label: 'Publicidad',
-        icon: 'pi pi-megaphone',
-        items: [
-          {
-            label: 'Anunciantes',
-            icon: 'pi pi-users',
-            command: () => this.router.navigate(['/dashboard/admin/advertisers'])
-          },
-          {
-            label: 'Precios',
-            icon: 'pi pi-dollar',
-            command: () => this.router.navigate(['/dashboard/admin/prices'])
-          }
-        ]
-      },
+      { label: 'Anunciantes', path: '/dashboard/admin/advertisers', icon: 'pi pi-megaphone' },
+      { label: 'Precios', path: '/dashboard/admin/prices', icon: 'pi pi-dollar' },
       { label: 'Costos', path: '/dashboard/admin/costs', icon: 'pi pi-calculator' },
       { label: 'Reportes', path: '/dashboard/admin/reports', icon: 'pi pi-chart-bar' }
     ]
   };
-
-  roleLinksCurrent: NavLink[] = [];
 
   constructor(
     private readonly authService: AuthService,
@@ -98,27 +67,30 @@ export class SharedNavbarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.isAuthenticated = this.authService.isAuthenticated();
+    this.refreshNavigationState(this.authService.getCurrentUser()?.role ?? this.authService.getRole());
 
     this.authService.currentUser$.subscribe((user) => {
-      this.isAuthenticated = !!user || this.authService.isAuthenticated();
-      this.roleLinksCurrent = user ? this.roleLinks[user.role] ?? [] : [];
+      this.refreshNavigationState(user?.role ?? this.authService.getRole());
     });
   }
 
-  navigateTo(path: string): void {
-    this.router.navigateByUrl(path);
+  get displayLinks(): NavLink[] {
+    return this.isAuthenticated ? this.roleLinksCurrent : this.publicLinks;
   }
 
-  // Convierte los NavLinks a MenuItems de PrimeNG
-  getPrimeMenuItems(items: NavLink[] | undefined): MenuItem[] {
-    if (!items) return [];
-    return items.map(item => ({
-      label: item.label,
-      icon: item.icon,
-      routerLink: item.path,
-      command: item.command
-    }));
+  get roleBadge(): string {
+    switch (this.currentRole) {
+      case 'SYSTEM_ADMIN':
+        return 'Modo admin';
+      case 'CINEMA_ADMIN':
+        return 'Modo cine';
+      case 'ADVERTISER':
+        return 'Modo anunciante';
+      case 'CLIENT':
+        return 'Modo cliente';
+      default:
+        return 'Explorar';
+    }
   }
 
   goToProfile(): void {
@@ -129,4 +101,9 @@ export class SharedNavbarComponent implements OnInit {
     this.authService.logout().subscribe(() => this.router.navigate(['/login']));
   }
 
+  private refreshNavigationState(role: UserRole | null): void {
+    this.currentRole = role;
+    this.isAuthenticated = !!role && this.authService.isAuthenticated();
+    this.roleLinksCurrent = role ? this.roleLinks[role] ?? [] : [];
+  }
 }

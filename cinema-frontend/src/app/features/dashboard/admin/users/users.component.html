@@ -1,12 +1,61 @@
-﻿<div class="page-wrapper">
+<div class="page-wrapper">
   <div class="users-grid">
-    <app-shared-card title="Gestión de usuarios">
-      <div class="header-actions">
-        <button pButton type="button" icon="pi pi-user-plus" label="Crear usuario" class="app-btn-accent" (click)="openCreateUserModal()"></button>
+    <app-shared-card title="Panel administrativo de usuarios y cines">
+      <div class="admin-hero">
+        <p class="admin-hero-title">Gestiona usuarios, empresas y sucursales desde un mismo lugar.</p>
+        <p class="admin-hero-subtitle">
+          Flujo recomendado: primero crea la empresa, luego la sucursal y finalmente asigna o crea su administrador de cine.
+        </p>
       </div>
 
-      @if (loadingCinemas) {
-        <p class="hint">Cargando listado de cines...</p>
+      <div class="header-actions">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-user-plus"
+          label="Crear usuario"
+          class="app-btn-accent"
+          (click)="openCreateUserModal()"></button>
+
+        <button
+          pButton
+          type="button"
+          icon="pi pi-building"
+          label="Crear empresa"
+          [outlined]="true"
+          (click)="openCreateCompanyModal()"></button>
+
+        <button
+          pButton
+          type="button"
+          icon="pi pi-map-marker"
+          label="Crear sucursal"
+          [outlined]="true"
+          [disabled]="companies.length === 0"
+          (click)="openCreateCinemaModal()"></button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-label">Usuarios</span>
+          <strong class="stat-value">{{ totalUsers }}</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Usuarios activos</span>
+          <strong class="stat-value">{{ activeUsers }}</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Empresas</span>
+          <strong class="stat-value">{{ companies.length }}</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Sucursales</span>
+          <strong class="stat-value">{{ cinemas.length }}</strong>
+        </div>
+      </div>
+
+      @if (loadingCinemas || loadingCompanies) {
+        <p class="hint">Cargando catálogos de empresas y sucursales...</p>
       }
 
       @if (errorMessage) {
@@ -17,12 +66,78 @@
       }
     </app-shared-card>
 
-    <app-shared-modal title="Crear usuario" [visible]="showCreateUserModal" width="42rem" (onClose)="closeCreateUserModal()">
-      <app-shared-form [fields]="fields" submitLabel="Crear" [loading]="creating" (onSubmit)="createUser($event)"></app-shared-form>
-      <p class="hint">Si el rol es administrador de cine, puedes dejar el cine sin asignar y hacerlo después.</p>
+    <app-shared-modal
+      title="Crear usuario"
+      [visible]="showCreateUserModal"
+      width="42rem"
+      (onClose)="closeCreateUserModal()">
+      <app-shared-form
+        [fields]="userFields"
+        submitLabel="Crear"
+        [loading]="creating"
+        (onSubmit)="createUser($event)"></app-shared-form>
+      <p class="hint">Si el rol es administrador de cine, puedes dejar la sucursal sin asignar y hacerlo después.</p>
     </app-shared-modal>
 
+    <app-shared-modal
+      title="Crear empresa de cine"
+      [visible]="showCreateCompanyModal"
+      width="34rem"
+      (onClose)="closeCreateCompanyModal()">
+      <app-shared-form
+        [fields]="companyFields"
+        submitLabel="Crear empresa"
+        [loading]="creatingCompany"
+        (onSubmit)="createCompany($event)"></app-shared-form>
+    </app-shared-modal>
+
+    <app-shared-modal
+      title="Crear sucursal"
+      [visible]="showCreateCinemaModal"
+      width="44rem"
+      (onClose)="closeCreateCinemaModal()">
+      <app-shared-form
+        [fields]="cinemaFields"
+        submitLabel="Crear sucursal"
+        [loading]="creatingCinema"
+        (onSubmit)="createCinema($event)"></app-shared-form>
+      <p class="hint">La fecha de inicio se asigna automáticamente con la fecha actual.</p>
+      <p class="hint">Puedes asignar un administrador de cine en este paso o dejarlo pendiente.</p>
+    </app-shared-modal>
+
+    <app-shared-card title="Empresas de cine">
+      @if (loadingCompanies) {
+        <p>Cargando empresas...</p>
+      } @else {
+        <div class="table-wrapper">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Fecha de creación</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (company of companies; track company.id) {
+                <tr>
+                  <td>{{ company.name }}</td>
+                  <td>{{ company.createdAt ? (company.createdAt | date: 'dd/MM/yyyy HH:mm') : '-' }}</td>
+                </tr>
+              }
+              @if (companies.length === 0) {
+                <tr>
+                  <td colspan="2" class="empty-row">No hay empresas registradas.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </app-shared-card>
+
     <app-shared-card title="Administradores de cine sin asignar">
+      <p class="hint">Asigna la sucursal a cada administrador pendiente para habilitar su operación diaria.</p>
+
       @if (loadingUnassigned) {
         <p>Cargando administradores de cine sin asignar...</p>
       } @else {
@@ -33,7 +148,7 @@
                 <th>Nombre</th>
                 <th>Correo</th>
                 <th>Teléfono</th>
-                <th>Cine</th>
+                <th>Sucursal</th>
                 <th>Acción</th>
               </tr>
             </thead>
@@ -49,7 +164,7 @@
                       [formControl]="getAssignmentControl(user.userId)"
                       optionLabel="label"
                       optionValue="value"
-                      placeholder="Selecciona un cine"
+                      placeholder="Selecciona una sucursal"
                       appendTo="body"></p-select>
                   </td>
                   <td>
