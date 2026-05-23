@@ -1,13 +1,200 @@
-﻿<div class="page-wrapper">
-  <p-card styleClass="page-card">
-    <ng-template pTemplate="header">
-      <div class="page-header">
-        <h1 class="page-title">{{ title }}</h1>
-        <p class="page-subtitle">{{ subtitle }}</p>
+﻿<p-toast></p-toast>
+
+<div class="fade-in">
+  <app-shared-card title="Métricas y Reportes Globales" footer="Administración General del Sistema">
+    
+    <!-- PANEL DE FILTROS DINÁMICO -->
+    <div class="grid formgrid mb-4 bg-gray-50 p-4 border-round">
+      <div class="col-12 md:col-3 mb-3 md:mb-0">
+        <label class="block font-medium mb-2">Fecha Desde</label>
+        <p-datePicker [(ngModel)]="fromDate" dateFormat="yy-mm-dd" [showIcon]="true" placeholder="YYYY-MM-DD" styleClass="w-full" [maxDate]="toDate || today"></p-datePicker>
       </div>
-    </ng-template>
-    <div class="page-content">
-      <p-progressSpinner *ngIf="false"/>
+      <div class="col-12 md:col-3 mb-3 md:mb-0">
+        <label class="block font-medium mb-2">Fecha Hasta</label>
+        <p-datePicker [(ngModel)]="toDate" dateFormat="yy-mm-dd" [showIcon]="true" placeholder="YYYY-MM-DD" styleClass="w-full" [minDate]="fromDate!" [maxDate]="today"></p-datePicker>
+      </div>
+
+      <!-- Filtro Opcional: Tipo de Anuncio -->
+      <div class="col-12 md:col-3 mb-3 md:mb-0" *ngIf="activeTab === 'adsPurchased'">
+        <label class="block font-medium mb-2">Tipo de Anuncio</label>
+        <p-dropdown [options]="adTypes" [(ngModel)]="selectedAdType" placeholder="Seleccione un tipo" styleClass="w-full" appendTo="body"></p-dropdown>
+      </div>
+
+      <!-- Filtro Opcional: Anunciante -->
+      <div class="col-12 md:col-3 mb-3 md:mb-0" *ngIf="activeTab === 'advertiserProfit'">
+        <label class="block font-medium mb-2">Anunciante</label>
+        <p-dropdown [options]="advertisers" [(ngModel)]="selectedAdvertiser" optionLabel="advertiserName" optionValue="advertiserId" placeholder="Seleccione anunciante" [showClear]="true" styleClass="w-full" appendTo="body"></p-dropdown>
+      </div>
+
+      <div class="col-12 md:col-3 flex align-items-end gap-2" [ngClass]="{'md:col-offset-3': activeTab !== 'adsPurchased' && activeTab !== 'advertiserProfit'}">
+        <button pButton pRipple icon="pi pi-filter-slash" class="p-button-secondary p-button-outlined" pTooltip="Limpiar" (click)="clearDates()"></button>
+        <button pButton label="Generar" icon="pi pi-search" class="p-button-outlined flex-grow-1" (click)="generatePreview()" [loading]="loading"></button>
+        <button pButton label="PDF" icon="pi pi-file-pdf" class="p-button-danger flex-grow-1" (click)="downloadPDF()" [loading]="loading"></button>
+      </div>
     </div>
-  </p-card>
+
+    <!-- PESTAÑAS DE REPORTES -->
+    <p-tabs [(value)]="activeTab" (valueChange)="generatePreview()">
+      <p-tablist>
+        <p-tab value="profit"><i class="pi pi-chart-line mr-2"></i>Ganancias</p-tab>
+        <p-tab value="adsPurchased"><i class="pi pi-megaphone mr-2"></i>Anuncios</p-tab>
+        <p-tab value="advertiserProfit"><i class="pi pi-users mr-2"></i>Por Anunciante</p-tab>
+        <p-tab value="popularRooms"><i class="pi pi-star mr-2"></i>Top Populares</p-tab>
+        <p-tab value="commentedRooms"><i class="pi pi-comments mr-2"></i>Top Comentadas</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        
+        <!-- 1. TAB: GANANCIAS DEL SISTEMA -->
+        <p-tabpanel value="profit">
+          <div *ngIf="profitData" class="fade-in">
+            <!-- Tarjetas de Resumen -->
+            <div class="grid mb-4">
+              <div class="col-12 md:col-4"><div class="p-3 bg-blue-50 border-round">
+                <span class="block text-blue-600 font-medium mb-1">Ingresos Totales</span><span class="text-2xl font-bold">Q {{ profitData.totalRevenue | number:'1.2-2' }}</span>
+              </div></div>
+              <div class="col-12 md:col-4"><div class="p-3 bg-red-50 border-round">
+                <span class="block text-red-600 font-medium mb-1">Costos Totales</span><span class="text-2xl font-bold">Q {{ profitData.totalCost | number:'1.2-2' }}</span>
+              </div></div>
+              <div class="col-12 md:col-4"><div class="p-3 bg-green-50 border-round">
+                <span class="block text-green-600 font-medium mb-1">Ganancia Neta</span><span class="text-2xl font-bold">Q {{ profitData.totalProfit | number:'1.2-2' }}</span>
+              </div></div>
+            </div>
+            
+            <p-table [value]="profitData.rows" styleClass="p-datatable-striped p-datatable-sm">
+              <ng-template pTemplate="header">
+                <tr><th>Cine</th><th>Costo Op.</th><th>Ingreso Ads</th><th>Ingreso Bloqueo</th><th>Ingreso Total</th><th>Ganancia</th></tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-row>
+                <tr>
+                  <td class="font-bold">{{ row.cinemaName }}</td>
+                  <td class="text-red-500">{{ row.operatingCost ? 'Q ' + row.operatingCost : 'N/A' }}</td>
+                  <td>{{ row.adRevenue ? 'Q ' + row.adRevenue : 'Q 0.00' }}</td>
+                  <td>{{ row.adBlockRevenue ? 'Q ' + row.adBlockRevenue : 'Q 0.00' }}</td>
+                  <td>{{ row.totalRevenue ? 'Q ' + row.totalRevenue : 'Q 0.00' }}</td>
+                  <td [ngClass]="{'text-green-600': row.totalProfit > 0, 'text-red-600': row.totalProfit < 0}" class="font-bold">Q {{ row.totalProfit }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+          <div *ngIf="!profitData && !loading" class="text-center p-5 text-gray-500">Seleccione generar para ver el reporte de ganancias.</div>
+        </p-tabpanel>
+
+        <!-- 2. TAB: ANUNCIOS COMPRADOS -->
+        <p-tabpanel value="adsPurchased">
+          <p-table [value]="adsPurchasedData" dataKey="adType" [loading]="loading" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header"><tr><th style="width: 5rem"></th><th>Tipo de Anuncio</th><th>Cantidad Vendida</th></tr></ng-template>
+            <ng-template pTemplate="body" let-ad let-expanded="expanded">
+              <tr>
+                <td><button type="button" pButton pRipple [pRowToggler]="ad" class="p-button-text p-button-rounded" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button></td>
+                <td class="font-bold">{{ ad.adType }}</td><td>{{ ad.adTypeCount }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="expandedrow" let-ad>
+              <tr>
+                <td colspan="3">
+                  <div class="p-3">
+                    <p-table [value]="ad.ads">
+                      <ng-template pTemplate="header"><tr><th>Anunciante</th><th>Monto Pagado</th><th>Desde</th><th>Hasta</th></tr></ng-template>
+                      <ng-template pTemplate="body" let-detail>
+                        <tr><td>{{ detail.advertiserName }}</td><td class="text-green-600">{{ detail.amountPaid }}</td><td>{{ detail.startDate }}</td><td>{{ detail.endDate }}</td></tr>
+                      </ng-template>
+                    </p-table>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <!-- 3. TAB: GANANCIAS POR ANUNCIANTE -->
+        <p-tabpanel value="advertiserProfit">
+          <p-table [value]="advertiserProfitData" dataKey="advertiserName" [loading]="loading" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header"><tr><th style="width: 5rem"></th><th>Anunciante</th><th>Total Pagado</th></tr></ng-template>
+            <ng-template pTemplate="body" let-adv let-expanded="expanded">
+              <tr>
+                <td><button type="button" pButton pRipple [pRowToggler]="adv" class="p-button-text p-button-rounded" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button></td>
+                <td class="font-bold">{{ adv.advertiserName }}</td><td class="text-green-600 font-bold">{{ adv.advertiserTotal }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="expandedrow" let-adv>
+              <tr>
+                <td colspan="3">
+                  <div class="p-3">
+                    <p-table [value]="adv.anuncios">
+                      <ng-template pTemplate="header"><tr><th>Tipo</th><th>Monto</th><th>Desde</th><th>Hasta</th></tr></ng-template>
+                      <ng-template pTemplate="body" let-anun>
+                        <tr><td>{{ anun.adType }}</td><td>{{ anun.amountPaid }}</td><td>{{ anun.startDate }}</td><td>{{ anun.endDate }}</td></tr>
+                      </ng-template>
+                    </p-table>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <!-- 4. TAB: TOP SALAS POPULARES -->
+        <p-tabpanel value="popularRooms">
+          <p-table [value]="topPopularData" dataKey="roomName" [loading]="loading" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header"><tr><th style="width: 5rem"></th><th>Cine</th><th>Sala</th><th>Score Promedio</th></tr></ng-template>
+            <ng-template pTemplate="body" let-room let-expanded="expanded">
+              <tr>
+                <td><button type="button" pButton pRipple [pRowToggler]="room" class="p-button-text p-button-rounded" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button></td>
+                <td>{{ room.companyName }}</td><td class="font-bold">{{ room.roomName }}</td><td><i class="pi pi-star-fill text-yellow-500 mr-2"></i>{{ room.avgScore }} / 5</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="expandedrow" let-room>
+              <tr>
+                <td colspan="4">
+                  <div class="p-3">
+                    <p-table [value]="room.tickets">
+                      <ng-template pTemplate="header"><tr><th>Usuario</th><th>Boletos Comprados</th></tr></ng-template>
+                      <ng-template pTemplate="body" let-ticket>
+                        <tr><td>{{ ticket.userName }}</td><td>{{ ticket.userTicketCount }}</td></tr>
+                      </ng-template>
+                    </p-table>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <!-- 5. TAB: TOP SALAS COMENTADAS -->
+        <p-tabpanel value="commentedRooms">
+          <p-table [value]="topCommentedData" dataKey="roomName" [loading]="loading" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header"><tr><th style="width: 5rem"></th><th>Cine</th><th>Sala</th><th>Total Comentarios</th></tr></ng-template>
+            <ng-template pTemplate="body" let-room let-expanded="expanded">
+              <tr>
+                <td><button type="button" pButton pRipple [pRowToggler]="room" class="p-button-text p-button-rounded" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button></td>
+                <td>{{ room.companyName }}</td><td class="font-bold">{{ room.roomName }}</td><td>{{ room.totalComments }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="expandedrow" let-room>
+              <tr>
+                <td colspan="4">
+                  <div class="p-3">
+                    <p-table [value]="room.comentarios">
+                      <ng-template pTemplate="header"><tr><th>Usuario</th><th>Fecha</th><th>Comentario</th></tr></ng-template>
+                      <ng-template pTemplate="body" let-com>
+                        <tr><td>{{ com.userName }}</td><td>{{ com.commentDate }}</td><td>{{ com.commentContent }}</td></tr>
+                      </ng-template>
+                    </p-table>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+      </p-tabpanels>
+    </p-tabs>
+
+  </app-shared-card>
 </div>
+
+<style>
+  .fade-in { animation: fadeIn 0.3s ease-in-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
