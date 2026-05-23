@@ -1,18 +1,24 @@
-﻿<p-toolbar styleClass="app-toolbar">
+<p-toolbar [styleClass]="isAuthenticated ? 'app-toolbar is-private' : 'app-toolbar is-public'">
   <ng-template pTemplate="start">
     <a class="brand-link" routerLink="/" aria-label="Ir al inicio">
       <img class="brand-logo" src="/logo-cinema.svg" alt="Cinema logo" />
-      <span class="brand-name">Cinema Frontend</span>
+      <div class="brand-copy">
+        <span class="brand-name">Cinema Frontend</span>
+        <small class="brand-mode">{{ roleBadge }}</small>
+      </div>
     </a>
   </ng-template>
 
   <ng-template pTemplate="center">
-    <div class="toolbar-links">
-      @for (link of publicLinks; track link.path) {
-        <button pButton type="button" [label]="link.label" [icon]="link.icon" class="p-button-text nav-btn" [routerLink]="link.path"></button>
-      }
-      @for (link of roleLinksCurrent; track link.path) {
-        <button pButton type="button" [label]="link.label" [icon]="link.icon" class="p-button-text nav-btn" [routerLink]="link.path"></button>
+    <div class="toolbar-links" [class.public-links]="!isAuthenticated">
+      @for (link of displayLinks; track link.path) {
+        <button
+          pButton
+          type="button"
+          [label]="link.label"
+          [icon]="link.icon"
+          class="p-button-text nav-btn"
+          [routerLink]="link.path"></button>
       }
     </div>
   </ng-template>
@@ -37,4 +43,3 @@
     }
   </ng-template>
 </p-toolbar>
-

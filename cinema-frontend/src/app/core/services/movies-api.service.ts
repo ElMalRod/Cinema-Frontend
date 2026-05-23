@@ -24,7 +24,7 @@ import {
 export const STATIC_COUNTRIES: CountryOption[] = [
   { id: 'aaaaaaaa-0001-0001-0001-000000000001', name: 'Estados Unidos' },
   { id: 'aaaaaaaa-0001-0001-0001-000000000002', name: 'México' },
-  { id: 'aaaaaaaa-0001-0001-0001-000000000003', name: 'España' }
+  { id: 'aaaaaaaa-0001-0001-0001-000000000003', name: 'Centroamérica' }
 ];
 
 @Injectable({ providedIn: 'root' })

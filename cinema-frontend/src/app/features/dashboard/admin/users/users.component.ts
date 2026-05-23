@@ -2,9 +2,11 @@
 import { FormControl } from '@angular/forms';
 import { FormField } from '../../../../shared/components/shared-form/shared-form.component';
 import { UserRole } from '../../../../core/models/user.model';
+import { STATIC_COUNTRIES } from '../../../../core/services/movies-api.service';
 import {
   AdminUserResponse,
   CinemaSummaryResponse,
+  CompanyResponse,
   UsersApiService
 } from '../../../../core/services/users-api.service';
 import { SharedModule } from '../../../../shared/shared.module';
@@ -24,28 +26,40 @@ type SelectOption = {
 export class AdminUsersComponent implements OnInit {
   loading = false;
   loadingCinemas = false;
+  loadingCompanies = false;
   loadingUnassigned = false;
   creating = false;
+  creatingCompany = false;
+  creatingCinema = false;
   togglingUserId: string | null = null;
   assigningUserId: string | null = null;
 
   showCreateUserModal = false;
+  showCreateCompanyModal = false;
+  showCreateCinemaModal = false;
 
   users: AdminUserResponse[] = [];
   unassignedCinemaAdmins: AdminUserResponse[] = [];
   cinemas: CinemaSummaryResponse[] = [];
+  companies: CompanyResponse[] = [];
 
   errorMessage = '';
   successMessage = '';
 
-  fields: FormField[] = [];
+  userFields: FormField[] = [];
+  companyFields: FormField[] = [];
+  cinemaFields: FormField[] = [];
 
   private readonly assignmentControls = new Map<string, FormControl<string | null>>();
 
   constructor(private readonly usersApiService: UsersApiService) {}
 
   ngOnInit(): void {
-    this.buildFormFields();
+    this.buildCompanyFields();
+    this.buildUserFields();
+    this.buildCinemaFields();
+
+    this.loadCompanies();
     this.loadCinemas();
     this.loadUsers();
     this.loadUnassignedCinemaAdmins();
@@ -58,6 +72,26 @@ export class AdminUsersComponent implements OnInit {
   closeCreateUserModal(): void {
     if (!this.creating) {
       this.showCreateUserModal = false;
+    }
+  }
+
+  openCreateCompanyModal(): void {
+    this.showCreateCompanyModal = true;
+  }
+
+  closeCreateCompanyModal(): void {
+    if (!this.creatingCompany) {
+      this.showCreateCompanyModal = false;
+    }
+  }
+
+  openCreateCinemaModal(): void {
+    this.showCreateCinemaModal = true;
+  }
+
+  closeCreateCinemaModal(): void {
+    if (!this.creatingCinema) {
+      this.showCreateCinemaModal = false;
     }
   }
 
@@ -92,6 +126,77 @@ export class AdminUsersComponent implements OnInit {
       });
   }
 
+  createCompany(value: Record<string, unknown>): void {
+    const name = String(value['name'] ?? '').trim();
+
+    if (!name) {
+      this.errorMessage = 'El nombre de la empresa es obligatorio.';
+      this.successMessage = '';
+      return;
+    }
+
+    this.creatingCompany = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.usersApiService.createCompany({ name }).subscribe({
+      next: () => {
+        this.creatingCompany = false;
+        this.showCreateCompanyModal = false;
+        this.successMessage = 'Empresa creada correctamente.';
+        this.loadCompanies();
+      },
+      error: () => {
+        this.creatingCompany = false;
+        this.errorMessage = 'No se pudo crear la empresa. Verifica si ya existe.';
+      }
+    });
+  }
+
+  createCinema(value: Record<string, unknown>): void {
+    const companyId = String(value['companyId'] ?? '').trim();
+    const countryId = String(value['countryId'] ?? '').trim();
+    const name = String(value['name'] ?? '').trim();
+
+    if (!companyId || !countryId || !name) {
+      this.errorMessage = 'Completa empresa, país y nombre de sucursal.';
+      this.successMessage = '';
+      return;
+    }
+
+    this.creatingCinema = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const adminCinemaId = String(value['adminCinemaId'] ?? '').trim() || undefined;
+
+    this.usersApiService
+      .createCinema({
+        companyId,
+        adminCinemaId,
+        countryId,
+        name,
+        address: String(value['address'] ?? '').trim() || undefined,
+        phone: String(value['phone'] ?? '').trim() || undefined,
+        email: String(value['email'] ?? '').trim() || undefined,
+        effectiveFrom: this.getTodayDate()
+      })
+      .subscribe({
+        next: () => {
+          this.creatingCinema = false;
+          this.showCreateCinemaModal = false;
+          this.successMessage = 'Sucursal creada correctamente.';
+          this.loadCinemas();
+          this.loadUnassignedCinemaAdmins();
+          this.loadUsers();
+        },
+        error: () => {
+          this.creatingCinema = false;
+          this.errorMessage = 'No se pudo crear la sucursal. Revisa los datos ingresados.';
+        }
+      });
+  }
+
   toggleStatus(user: AdminUserResponse): void {
     this.togglingUserId = user.userId;
     this.errorMessage = '';
@@ -120,7 +225,7 @@ export class AdminUsersComponent implements OnInit {
     const cinemaId = control.value;
 
     if (!cinemaId) {
-      this.errorMessage = 'Selecciona un cine para asignar al administrador.';
+      this.errorMessage = 'Selecciona una sucursal para asignar al administrador.';
       this.successMessage = '';
       return;
     }
@@ -138,14 +243,14 @@ export class AdminUsersComponent implements OnInit {
       },
       error: () => {
         this.assigningUserId = null;
-        this.errorMessage = 'No se pudo asignar el cine al administrador.';
+        this.errorMessage = 'No se pudo asignar la sucursal al administrador.';
       }
     });
   }
 
   getCinemaOptions(): SelectOption[] {
     return this.cinemas.map((cinema) => ({
-      label: cinema.name,
+      label: cinema.companyName ? `${cinema.companyName} - ${cinema.name}` : cinema.name,
       value: cinema.id
     }));
   }
@@ -165,8 +270,20 @@ export class AdminUsersComponent implements OnInit {
     return new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(value);
   }
 
-  private buildFormFields(): void {
-    this.fields = [
+  get totalUsers(): number {
+    return this.users.length;
+  }
+
+  get activeUsers(): number {
+    return this.users.filter((user) => user.active).length;
+  }
+
+  get inactiveUsers(): number {
+    return this.users.filter((user) => !user.active).length;
+  }
+
+  private buildUserFields(): void {
+    this.userFields = [
       { name: 'name', label: 'Nombre completo', type: 'text', required: true },
       { name: 'phone', label: 'Teléfono (opcional)', type: 'text' },
       { name: 'email', label: 'Correo', type: 'email', required: true },
@@ -184,10 +301,66 @@ export class AdminUsersComponent implements OnInit {
       },
       {
         name: 'cinemaId',
-        label: 'Cine a asignar (solo para administrador de cine)',
+        label: 'Sucursal a asignar (solo para administrador de cine)',
         type: 'select',
         options: [{ label: 'Sin asignar por ahora', value: '' }, ...this.getCinemaOptions()]
       }
+    ];
+  }
+
+  private buildCompanyFields(): void {
+    this.companyFields = [
+      {
+        name: 'name',
+        label: 'Nombre de la empresa de cine',
+        type: 'text',
+        required: true,
+        placeholder: 'Ejemplo: Cinepolis'
+      }
+    ];
+  }
+
+  private buildCinemaFields(): void {
+    this.cinemaFields = [
+      {
+        name: 'companyId',
+        label: 'Empresa',
+        type: 'select',
+        required: true,
+        options: this.companies.map((company) => ({ label: company.name, value: company.id })),
+        placeholder: 'Selecciona una empresa'
+      },
+      {
+        name: 'countryId',
+        label: 'País',
+        type: 'select',
+        required: true,
+        options: STATIC_COUNTRIES.map((country) => ({ label: country.name, value: country.id })),
+        placeholder: 'Selecciona un país'
+      },
+      {
+        name: 'name',
+        label: 'Nombre de la sucursal',
+        type: 'text',
+        required: true,
+        placeholder: 'Ejemplo: Cinepolis Xela'
+      },
+      {
+        name: 'adminCinemaId',
+        label: 'Administrador de cine (opcional)',
+        type: 'select',
+        options: [
+          { label: 'Asignar después', value: '' },
+          ...this.unassignedCinemaAdmins.map((admin) => ({
+            label: `${admin.name || 'Sin nombre'} (${admin.email})`,
+            value: admin.userId
+          }))
+        ],
+        placeholder: 'Selecciona un administrador'
+      },
+      { name: 'address', label: 'Dirección (opcional)', type: 'text' },
+      { name: 'phone', label: 'Teléfono (opcional)', type: 'text' },
+      { name: 'email', label: 'Correo (opcional)', type: 'email' }
     ];
   }
 
@@ -205,17 +378,32 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
+  private loadCompanies(): void {
+    this.loadingCompanies = true;
+    this.usersApiService.listCompanies().subscribe({
+      next: (companies) => {
+        this.loadingCompanies = false;
+        this.companies = companies;
+        this.buildCinemaFields();
+      },
+      error: () => {
+        this.loadingCompanies = false;
+        this.errorMessage = 'No se pudo cargar el listado de empresas.';
+      }
+    });
+  }
+
   private loadCinemas(): void {
     this.loadingCinemas = true;
     this.usersApiService.listCinemas().subscribe({
       next: (cinemas) => {
         this.loadingCinemas = false;
         this.cinemas = cinemas;
-        this.buildFormFields();
+        this.buildUserFields();
       },
       error: () => {
         this.loadingCinemas = false;
-        this.errorMessage = 'No se pudo cargar el listado de cines.';
+        this.errorMessage = 'No se pudo cargar el listado de sucursales.';
       }
     });
   }
@@ -226,6 +414,7 @@ export class AdminUsersComponent implements OnInit {
       next: (users) => {
         this.loadingUnassigned = false;
         this.unassignedCinemaAdmins = users;
+        this.buildCinemaFields();
 
         const validIds = new Set(users.map((user) => user.userId));
         for (const key of this.assignmentControls.keys()) {
@@ -239,5 +428,13 @@ export class AdminUsersComponent implements OnInit {
         this.errorMessage = 'No se pudo cargar administradores de cine sin asignar.';
       }
     });
+  }
+
+  private getTodayDate(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

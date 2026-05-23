@@ -9,5 +9,5 @@ export interface User {
 
 export const USER_ROLE_OPTIONS: { label: string; value: UserRole }[] = [
   { label: 'Cliente', value: 'CLIENT' },
-  { label: 'Administrador de Cine', value: 'CINEMA_ADMIN' }
+  { label: 'Anunciante', value: 'ADVERTISER' }
 ];

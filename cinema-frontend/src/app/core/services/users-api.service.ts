@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+﻿import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -44,10 +44,35 @@ export interface AdminUserResponse {
 
 export interface CinemaSummaryResponse {
   id: string;
+  companyId?: string | null;
+  companyName?: string | null;
+  adminCinemaId?: string | null;
   name: string;
   address?: string | null;
   phone?: string | null;
   email?: string | null;
+}
+
+export interface CompanyResponse {
+  id: string;
+  name: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateCompanyRequest {
+  name: string;
+}
+
+export interface CreateCinemaRequest {
+  companyId: string;
+  adminCinemaId?: string;
+  countryId: string;
+  name: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  effectiveFrom: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -91,6 +116,18 @@ export class UsersApiService {
 
   listCinemas(): Observable<CinemaSummaryResponse[]> {
     return this.http.get<CinemaSummaryResponse[]>(environment.apiBaseUrl + '/cinemas/v1/cinemas');
+  }
+
+  listCompanies(): Observable<CompanyResponse[]> {
+    return this.http.get<CompanyResponse[]>(environment.apiBaseUrl + '/cinemas/v1/cinemas/companies');
+  }
+
+  createCompany(payload: CreateCompanyRequest): Observable<CompanyResponse> {
+    return this.http.post<CompanyResponse>(environment.apiBaseUrl + '/cinemas/v1/cinemas/companies', payload);
+  }
+
+  createCinema(payload: CreateCinemaRequest): Observable<void> {
+    return this.http.post<void>(environment.apiBaseUrl + '/cinemas/v1/cinemas', payload);
   }
 
   deactivateUser(userId: string): Observable<void> {
