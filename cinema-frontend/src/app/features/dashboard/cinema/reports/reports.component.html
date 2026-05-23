@@ -1,13 +1,186 @@
-﻿<div class="page-wrapper">
-  <p-card styleClass="page-card">
-    <ng-template pTemplate="header">
-      <div class="page-header">
-        <h1 class="page-title">{{ title }}</h1>
-        <p class="page-subtitle">{{ subtitle }}</p>
+﻿<p-toast></p-toast>
+
+<div class="fade-in">
+  <app-shared-card title="Reportes y Estadísticas" footer="Centro de análisis del Cine">
+    
+    <!-- Panel de Filtros -->
+    <div class="grid formgrid mb-4 bg-gray-50 p-4 border-round">
+      
+      <!-- Filtro: Fecha Desde -->
+      <div class="col-12 md:col-4 mb-3 md:mb-0">
+        <label class="block font-medium mb-2">Fecha Desde</label>
+        <p-datePicker 
+          [(ngModel)]="fromDate" 
+          dateFormat="yy-mm-dd" 
+          [showIcon]="true" 
+          placeholder="YYYY-MM-DD" 
+          styleClass="w-full"
+          [maxDate]="toDate || today"> 
+        </p-datePicker>
       </div>
-    </ng-template>
-    <div class="page-content">
-      <p-progressSpinner *ngIf="false"/>
+
+      <!-- Filtro: Fecha Hasta -->
+      <div class="col-12 md:col-4 mb-3 md:mb-0">
+        <label class="block font-medium mb-2">Fecha Hasta</label>
+        <p-datePicker 
+          [(ngModel)]="toDate" 
+          dateFormat="yy-mm-dd" 
+          [showIcon]="true" 
+          placeholder="YYYY-MM-DD" 
+          styleClass="w-full"
+          [minDate]="fromDate" 
+          [maxDate]="today">
+        </p-datePicker>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="col-12 md:col-4 flex align-items-end gap-2">
+        <button pButton pRipple icon="pi pi-filter-slash" class="p-button-secondary p-button-outlined" pTooltip="Limpiar fechas" tooltipPosition="top" (click)="clearDates()"></button>
+        <button pButton label="Previsualizar" icon="pi pi-search" class="p-button-outlined flex-grow-1" (click)="generatePreview()" [loading]="loading"></button>
+        <button pButton label="PDF" icon="pi pi-file-pdf" class="p-button-danger flex-grow-1" (click)="downloadPDF()" [loading]="loading"></button>
+      </div>
     </div>
-  </p-card>
+
+    <!-- Pestañas de Reportes -->
+    <p-tabs [(value)]="activeTab" (valueChange)="generatePreview()">
+      <p-tablist>
+        <p-tab value="comments"><i class="pi pi-comments mr-2"></i>Comentarios</p-tab>
+        <p-tab value="showtimes"><i class="pi pi-video mr-2"></i>Funciones</p-tab>
+        <p-tab value="topRooms"><i class="pi pi-star mr-2"></i>Top Salas</p-tab>
+        <p-tab value="sales"><i class="pi pi-ticket mr-2"></i>Ventas</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        
+        <!-- 1. TAB: COMENTARIOS -->
+        <p-tabpanel value="comments">
+          <p-table [value]="commentsData" dataKey="roomName" [loading]="loading" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 5rem"></th>
+                <th>Nombre de Sala</th>
+                <th>Total Comentarios</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-room let-expanded="expanded">
+              <tr>
+                <td><button type="button" pButton pRipple [pRowToggler]="room" class="p-button-text p-button-rounded p-button-plain" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button></td>
+                <td class="font-bold">{{ room.roomName }}</td>
+                <td>{{ room.totalComments }}</td>
+              </tr>
+            </ng-template>
+            <!-- CORRECCIÓN AQUÍ: expandedrow -->
+            <ng-template pTemplate="expandedrow" let-room>
+              <tr>
+                <td colspan="3">
+                  <div class="p-3">
+                    <p-table [value]="room.comentarios">
+                      <ng-template pTemplate="header">
+                        <tr><th>Usuario</th><th>Fecha</th><th>Comentario</th></tr>
+                      </ng-template>
+                      <ng-template pTemplate="body" let-com>
+                        <tr><td>{{ com.userName }}</td><td>{{ com.commentDate }}</td><td>{{ com.commentContent }}</td></tr>
+                      </ng-template>
+                      <ng-template pTemplate="emptymessage"><tr><td colspan="3">No hay comentarios en este periodo.</td></tr></ng-template>
+                    </p-table>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <!-- 2. TAB: FUNCIONES -->
+        <p-tabpanel value="showtimes">
+          <p-table [value]="showtimesData" dataKey="roomName" [loading]="loading" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header"><tr><th style="width: 5rem"></th><th>Sala</th><th>Total Funciones</th></tr></ng-template>
+            <ng-template pTemplate="body" let-room let-expanded="expanded">
+              <tr>
+                <td><button type="button" pButton pRipple [pRowToggler]="room" class="p-button-text p-button-rounded p-button-plain" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button></td>
+                <td class="font-bold">{{ room.roomName }}</td><td>{{ room.totalShowtimes }}</td>
+              </tr>
+            </ng-template>
+            <!-- CORRECCIÓN AQUÍ: expandedrow -->
+            <ng-template pTemplate="expandedrow" let-room>
+              <tr>
+                <td colspan="3">
+                  <div class="p-3">
+                    <p-table [value]="room.funciones">
+                      <ng-template pTemplate="header"><tr><th>Película</th><th>Fecha</th><th>Inicio</th><th>Fin</th></tr></ng-template>
+                      <ng-template pTemplate="body" let-fun>
+                        <tr><td>{{ fun.movieTitle }}</td><td>{{ fun.date }}</td><td>{{ fun.startTime }}</td><td>{{ fun.endTime }}</td></tr>
+                      </ng-template>
+                    </p-table>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <!-- 3. TAB: TOP SALAS -->
+        <p-tabpanel value="topRooms">
+          <p-table [value]="topRoomsData" dataKey="roomName" [loading]="loading" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header"><tr><th style="width: 5rem"></th><th>Sala</th><th>Calificación Promedio</th><th>Total Votos</th></tr></ng-template>
+            <ng-template pTemplate="body" let-room let-expanded="expanded">
+              <tr>
+                <td><button type="button" pButton pRipple [pRowToggler]="room" class="p-button-text p-button-rounded p-button-plain" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button></td>
+                <td class="font-bold">{{ room.roomName }}</td><td>{{ room.avgScore }} / 5</td><td>{{ room.totalRatings }}</td>
+              </tr>
+            </ng-template>
+            <!-- CORRECCIÓN AQUÍ: expandedrow -->
+            <ng-template pTemplate="expandedrow" let-room>
+              <tr>
+                <td colspan="4">
+                  <div class="p-3">
+                    <p-table [value]="room.calificaciones">
+                      <ng-template pTemplate="header"><tr><th>Usuario</th><th>Puntaje</th><th>Fecha</th></tr></ng-template>
+                      <ng-template pTemplate="body" let-cal>
+                        <tr><td>{{ cal.userName }}</td><td><i class="pi pi-star-fill text-yellow-500 mr-2"></i>{{ cal.score }}</td><td>{{ cal.createdAt }}</td></tr>
+                      </ng-template>
+                    </p-table>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <!-- 4. TAB: VENTAS -->
+        <p-tabpanel value="sales">
+          <p-table [value]="ticketSalesData" dataKey="roomName" [loading]="loading" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header"><tr><th style="width: 5rem"></th><th>Sala</th><th>Ingresos Totales</th></tr></ng-template>
+            <ng-template pTemplate="body" let-room let-expanded="expanded">
+              <tr>
+                <td><button type="button" pButton pRipple [pRowToggler]="room" class="p-button-text p-button-rounded p-button-plain" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button></td>
+                <td class="font-bold">{{ room.roomName }}</td><td class="text-green-600 font-bold">{{ room.roomTotal }}</td>
+              </tr>
+            </ng-template>
+            <!-- CORRECCIÓN AQUÍ: expandedrow -->
+            <ng-template pTemplate="expandedrow" let-room>
+              <tr>
+                <td colspan="3">
+                  <div class="p-3">
+                    <p-table [value]="room.boletos">
+                      <ng-template pTemplate="header"><tr><th>Cliente</th><th>Película</th><th>Asiento</th><th>Precio</th><th>Fecha Compra</th></tr></ng-template>
+                      <ng-template pTemplate="body" let-bol>
+                        <tr><td>{{ bol.userName }}</td><td>{{ bol.movieTitle }}</td><td>{{ bol.seat }}</td><td>{{ bol.price }}</td><td>{{ bol.purchaseDate }}</td></tr>
+                      </ng-template>
+                    </p-table>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+      </p-tabpanels>
+    </p-tabs>
+
+  </app-shared-card>
 </div>
+
+<style>
+  .fade-in { animation: fadeIn 0.3s ease-in-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
