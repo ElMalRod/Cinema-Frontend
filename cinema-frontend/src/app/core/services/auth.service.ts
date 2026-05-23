@@ -17,6 +17,14 @@ interface RegisterRequest {
   role: UserRole;
 }
 
+interface AdminCinemaResponse {
+  id: string;
+  countryId: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+}
+
 interface ForgotPasswordRequest {
   email: string;
 }
@@ -64,13 +72,38 @@ export class AuthService {
 
   login(payload: LoginRequest): Observable<AuthResponse> {
     return this.http.post<BackendLoginResponse>(`${environment.apiBaseUrl}/auth/login`, payload).pipe(
+      // 1. Guardamos el token inicial
       tap((response) => localStorage.setItem('token', response.token)),
+      
+      // 2. Obtenemos los datos del usuario (rol, email, id)
       switchMap((response) =>
         this.getMe().pipe(
           map((me) => ({ token: response.token, user: this.mapUserFromMe(me) })),
           catchError(() => of({ token: response.token, user: this.mapUserFromLogin(response, payload.email) }))
         )
       ),
+
+      // 3. LA INTERCEPCIÓN DEL ADMIN
+      switchMap(({ token, user }) => {
+        // Si el que se esta logueando es un administrador de cine
+        if (user.role === 'CINEMA_ADMIN') {
+          // .llamamos al endpoint usando el ID del usuario
+          return this.fetchCinemaId(user.id).pipe(
+            map((cinemaId) => {
+              // Si el endpoint nos devolvio el ID del cine exitosamente, lo guardamos
+              if (cinemaId) {
+                localStorage.setItem('cinemaId', cinemaId);
+              }
+              // Continuamos con el flujo pasando el token y el user intactos
+              return { token, user };
+            })
+          );
+        }
+        // Si es un CLIENT o un SYSTEM_ADMIN, ignoramos esto y continuamos
+        return of({ token, user });
+      }),
+
+      // 4. Finalizamos el login guardando la sesión principal
       tap(({ token, user }) => {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
@@ -236,4 +269,17 @@ export class AuthService {
     localStorage.removeItem('user');
     this.currentUserSubject.next(null);
   }
+
+  private fetchCinemaId(adminUserId: string): Observable<string | null> {
+    return this.http.get<AdminCinemaResponse>(`${environment.apiBaseUrl}/cinemas/v1/cinemas/admin/${adminUserId}`).pipe(
+      map((response) => response.id), 
+      // Si el usuario no tiene cine asignado o hay error, no rompemos la app, devolvemos null
+      catchError(() => of(null)) 
+    );
+  }
+
+  getCinemaId(): string | null {
+    return localStorage.getItem('cinemaId');
+  }
+  
 }
