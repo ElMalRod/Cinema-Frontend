@@ -13,11 +13,17 @@ export const routes: Routes = [
     loadComponent: () => import('./features/public/movies-page/movies-page.component').then((m) => m.MoviesPage)
   },
   {
+    path: 'movies/showtimes/:movieId',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./features/public/movie-showtimes-page/movie-showtimes-page.component').then((m) => m.MovieShowtimesPage)
+  },
+  {
     path: 'movies/:id',
     loadComponent: () => import('./features/public/movie-detail-page/movie-detail-page.component').then((m) => m.MovieDetailPage)
   },
   {
     path: 'cinemas',
+    canActivate: [AuthGuard],
     loadComponent: () => import('./features/public/cinemas-page/cinemas-page.component').then((m) => m.CinemasPage)
   },
   {

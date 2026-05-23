@@ -75,7 +75,7 @@ export class SharedNavbarComponent implements OnInit {
   }
 
   get displayLinks(): NavLink[] {
-    return this.isAuthenticated ? this.roleLinksCurrent : this.publicLinks;
+    return this.isAuthenticated ? [...this.publicLinks, ...this.roleLinksCurrent] : this.publicLinks;
   }
 
   get roleBadge(): string {

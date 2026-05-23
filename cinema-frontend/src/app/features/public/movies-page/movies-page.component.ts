@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -22,7 +23,8 @@ import {
   ClassificationOption,
   CommentItem,
   RatingSummary,
-  RatingItem
+  RatingItem,
+  PosterItem
 } from '../../../core/models/movie.model';
 
 @Component({
@@ -65,10 +67,39 @@ export class MoviesPage implements OnInit {
   loadingModal = false;
   selectedMovie: MovieDetail | null = null;
 
-  get mainPoster(): string | null {
+  // Poster slideshow
+  posters: PosterItem[] = [];
+  posterIndex = 0;
+  private posterInterval: ReturnType<typeof setInterval> | null = null;
+
+  get currentPosterUrl(): string | null {
+    if (this.posters.length > 0) return this.posters[this.posterIndex].urlImage;
     if (!this.selectedMovie) return null;
     const main = this.selectedMovie.posters.find(p => p.main);
     return main?.urlImage ?? this.selectedMovie.posters[0]?.urlImage ?? null;
+  }
+
+  prevPoster(): void {
+    this.posterIndex = (this.posterIndex - 1 + this.posters.length) % this.posters.length;
+  }
+
+  nextPoster(): void {
+    this.posterIndex = (this.posterIndex + 1) % this.posters.length;
+  }
+
+  private startPosterSlideshow(): void {
+    this.stopPosterSlideshow();
+    if (this.posters.length <= 1) return;
+    this.posterInterval = setInterval(() => {
+      this.posterIndex = (this.posterIndex + 1) % this.posters.length;
+    }, 10000);
+  }
+
+  private stopPosterSlideshow(): void {
+    if (this.posterInterval) {
+      clearInterval(this.posterInterval);
+      this.posterInterval = null;
+    }
   }
 
   // ── Comentarios ──────────────────────────────────────────────────────────────
@@ -107,7 +138,8 @@ export class MoviesPage implements OnInit {
     private readonly moviesApi: MoviesApiService,
     private readonly authService: AuthService,
     private readonly messageService: MessageService,
-    private readonly sanitizer: DomSanitizer
+    private readonly sanitizer: DomSanitizer,
+    private readonly router: Router
   ) {}
 
   ngOnInit(): void {
@@ -157,6 +189,9 @@ export class MoviesPage implements OnInit {
     this.resetRatingForm();
     this.comments = [];
     this.ratingSummary = null;
+    this.posters = [];
+    this.posterIndex = 0;
+    this.stopPosterSlideshow();
 
     this.moviesApi.getMovieDetail(movie.id, this.countryId).subscribe({
       next: detail => {
@@ -164,6 +199,17 @@ export class MoviesPage implements OnInit {
         this.loadingModal = false;
         this.loadComments(movie.id);
         this.loadRatings(movie.id);
+        this.moviesApi.getMoviePosters(movie.id).subscribe({
+          next: posters => {
+            this.posters = posters.length > 0 ? posters : detail.posters;
+            this.posterIndex = 0;
+            this.startPosterSlideshow();
+          },
+          error: () => {
+            this.posters = detail.posters;
+            this.startPosterSlideshow();
+          }
+        });
       },
       error: (err: HttpErrorResponse) => {
         this.loadingModal = false;
@@ -173,8 +219,18 @@ export class MoviesPage implements OnInit {
   }
 
   closeModal(): void {
+    this.stopPosterSlideshow();
+    this.posters = [];
+    this.posterIndex = 0;
     this.showMovieModal = false;
     this.selectedMovie = null;
+  }
+
+  goToShowtimes(): void {
+    if (!this.selectedMovie) return;
+    this.router.navigate(['/movies/showtimes', this.selectedMovie.id], {
+      state: { movieTitle: this.selectedMovie.title }
+    });
   }
 
   formatDuration(minutes: number): string {
