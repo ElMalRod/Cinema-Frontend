@@ -1,6 +1,9 @@
 ﻿<p-toast position="top-right" appendTo="body" />
 
 <div class="page-wrapper">
+  @if (cinemaId) {
+      <app-ad-banner [cinemaId]="cinemaId"></app-ad-banner>
+  }
   <p-card styleClass="page-card">
     <ng-template pTemplate="header">
       <div class="page-header">

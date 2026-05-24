@@ -12,7 +12,7 @@ import { SelectModule } from 'primeng/select';
 import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
-import { catchError, forkJoin, of, switchMap } from 'rxjs';
+import { tap,catchError, forkJoin, of, switchMap } from 'rxjs';
 import { CinemaApiService } from '../../../../core/services/cinema-api.service';
 import { TicketsService } from '../../../../core/services/tickets.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -26,6 +26,8 @@ import {
 } from '../../../../core/models/cinema.model';
 import { OccupiedSeat } from '../../../../core/models/ticket.model';
 import { MovieSummary } from '../../../../core/models/movie.model';
+
+import { AdBannerComponent } from '../../../../shared/components/ad-banner/ad-banner.component';
 
 type VersionType = 'ORIGINAL' | 'DUBBED' | 'SUBTITLED';
 
@@ -67,7 +69,7 @@ interface ShowtimeForm {
     CommonModule, FormsModule,
     CardModule, ButtonModule, DialogModule, ToastModule,
     ProgressSpinnerModule, TagModule, SelectModule, InputTextModule,
-    TooltipModule
+    TooltipModule, AdBannerComponent
   ],
   providers: [MessageService],
   templateUrl: './schedules.component.html',
@@ -81,6 +83,8 @@ export class SchedulesComponent implements OnInit {
   selectedTheaterId: string | null = null;
   showtimes: ShowtimeWithMovie[] = [];
   movies: MovieSummary[] = [];
+
+  cinemaId: string | null = null;
 
   loadingTheaters = false;
   loadingShowtimes = false;
@@ -171,6 +175,7 @@ export class SchedulesComponent implements OnInit {
     this.loadingTheaters = true;
 
     this.resolveCinemaId().pipe(
+      tap(cinemaId => this.cinemaId = cinemaId ?? null),
       switchMap(cinemaId => {
         if (!cinemaId) return of(null);
         return this.cinemaApi.getAdminTheaters(cinemaId);

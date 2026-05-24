@@ -24,7 +24,9 @@ import {
   TheaterPricingResponse,
   TypeTheater,
   UpdateShowtimePayload,
-  UpdateTheaterPayload
+  UpdateTheaterPayload,
+  AdBlockResponse,
+  AdBlockRequest
 } from '../models/cinema.model';
 
 /* ── Raw backend response types ─────────────────────────────────────────── */
@@ -221,5 +223,20 @@ export class CinemaApiService {
 
   createOperatingCost(payload: CreateOperatingCostPayload): Observable<void> {
     return this.http.post<void>(`${this.base}/operating-costs`, payload);
+  }
+
+
+  // ----------------- Bloqueo de Anuncios (Ad Blocks) -----------------------------
+
+  createAdBlock(cinemaId: string, request: AdBlockRequest): Observable<AdBlockResponse> {
+    return this.http.post<AdBlockResponse>(`${this.base}/cinemas/ad-blocks/${cinemaId}`, request);
+  }
+
+  getAdBlocksHistory(cinemaId: string): Observable<AdBlockResponse[]> {
+    return this.http.get<AdBlockResponse[]>(`${this.base}/cinemas/ad-blocks/${cinemaId}`);
+  }
+
+  getAdBlockPricing(cinemaId: string): Observable<AdBlockPricingResponse> {
+    return this.http.get<AdBlockPricingResponse>(`${this.base}/ad-block-pricing/cinemas/${cinemaId}`);
   }
 }
