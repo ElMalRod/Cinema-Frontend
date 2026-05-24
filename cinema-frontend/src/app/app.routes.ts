@@ -22,6 +22,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/public/movie-detail-page/movie-detail-page.component').then((m) => m.MovieDetailPage)
   },
   {
+    path: 'checkout/seats',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./features/public/checkout-seats/checkout-seats.component').then((m) => m.CheckoutSeatsComponent)
+  },
+  {
     path: 'cinemas',
     canActivate: [AuthGuard],
     loadComponent: () => import('./features/public/cinemas-page/cinemas-page.component').then((m) => m.CinemasPage)

@@ -1,0 +1,167 @@
+.checkout-page {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.checkout-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  h2 { margin: 1rem 0 0; font-size: 1.8rem; }
+}
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 2rem;
+  
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// === MAPA DE ASIENTOS ===
+.seat-map-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  overflow-x: auto;
+}
+
+.screen-indicator {
+  margin-bottom: 3rem;
+  .screen {
+    background: linear-gradient(to bottom, #d1d5db, #f3f4f6);
+    height: 40px;
+    border-top-left-radius: 50%;
+    border-top-right-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #6b7280;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.seat-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.seat-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  .row-label {
+    width: 20px;
+    text-align: center;
+    font-weight: bold;
+    color: #6b7280;
+  }
+
+  .seats-wrapper {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+// Botones de asiento
+.seat-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+  &.available {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    &:hover { background-color: #e5e7eb; transform: scale(1.1); }
+  }
+
+  &.selected {
+    background-color: #22c55e;
+    color: white;
+    border: 1px solid #16a34a;
+    transform: scale(1.1);
+  }
+
+  &.occupied {
+    background-color: #9ca3af;
+    color: #f3f4f6;
+    cursor: not-allowed;
+    opacity: 0.7;
+    box-shadow: none;
+  }
+}
+
+.seat-legend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #4b5563;
+    
+    .seat-btn { cursor: default; box-shadow: none; &:hover { transform: none; } }
+  }
+}
+
+// === RESUMEN ===
+.summary-container {
+  .summary-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    position: sticky;
+    top: 2rem;
+    
+    h3 { margin-top: 0; color: #1f2937; }
+  }
+
+  .seat-badge {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: bold;
+  }
+
+  .wallet-box {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    transition: all 0.3s;
+
+    &.insufficient {
+      background: #fef2f2;
+      border-color: #fca5a5;
+    }
+  }
+}

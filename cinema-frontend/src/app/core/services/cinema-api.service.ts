@@ -8,7 +8,9 @@ import {
   TheaterInfo,
   TheaterComment,
   TheaterRatingSummary,
-  ShowtimeInfo
+  ShowtimeInfo,
+  SeatResponse,
+  TheaterPricingResponse
 } from '../models/cinema.model';
 
 /* ── Raw backend response types ─────────────────────────────────────────── */
@@ -118,5 +120,14 @@ export class CinemaApiService {
 
   updateTheaterRating(ratingId: string, userId: string, score: number): Observable<TheaterRatingSummary> {
     return this.http.patch<TheaterRatingSummary>(`${this.base}/ratings/${ratingId}`, { userId, score });
+  }
+
+
+  getTheaterSeats(theaterId: string): Observable<SeatResponse[]> {
+    return this.http.get<SeatResponse[]>(`${this.base}/theaters/${theaterId}/seats`);
+  }
+
+  getTheaterPricing(theaterId: string): Observable<TheaterPricingResponse> {
+    return this.http.get<TheaterPricingResponse>(`${this.base}/theaters/${theaterId}/pricing`);
   }
 }

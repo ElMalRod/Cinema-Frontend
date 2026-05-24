@@ -54,3 +54,21 @@ export interface TheaterRatingSummary {
   ratings: TheaterRating[];
   averageScore: number | null;
 }
+
+export interface SeatResponse {
+  id: string;
+  rowName: string;
+  colNumber: number;
+  isActive?: boolean;
+  active?: boolean;
+}
+
+export interface TheaterPricingResponse {
+  theaterPricingId: string;
+  theaterId: string;
+  theaterName: string;
+  typeTheaterId: string;
+  typeTheaterName: string;
+  price: number;
+  effectiveDate: string;
+}
