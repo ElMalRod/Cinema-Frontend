@@ -352,4 +352,30 @@ export class MovieShowtimesPage implements OnInit {
     if (typeof err.error === 'string' && err.error.trim()) return err.error;
     return err.error?.message || err.error?.error || fallback;
   }
+
+  goToSeatSelection(showtime: ShowtimeInfo): void {
+    if (!this.selectedCompany || !this.selectedTheater) return;
+
+    // Empaquetamos toda la data necesaria para la siguiente pantalla
+    const checkoutData = {
+      movieId: this.movieId,
+      movieTitle: this.movieTitle,
+      companyId: this.selectedCompany.id,
+      companyName: this.selectedCompany.name,
+      theaterId: this.selectedTheater.id,
+      theaterName: this.selectedTheater.name,
+      theaterRows: this.selectedTheater.rows,
+      theaterCols: this.selectedTheater.cols,
+      scheduleId: showtime.id,
+      showtimeDate: showtime.dateShowtime,
+      showtimeStart: showtime.startShowtime,
+      version: showtime.versionTypeName
+    };
+
+    // Cerramos el modal
+    this.closeTheaterModal();
+
+    // Navegamos al checkout pasando la info por history.state
+    this.router.navigate(['/checkout/seats'], { state: { checkoutData } });
+  }
 }
