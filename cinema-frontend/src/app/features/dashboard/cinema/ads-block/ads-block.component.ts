@@ -2,11 +2,12 @@
 import { Component } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { AdBannerComponent } from '../../../../shared/components/ad-banner/ad-banner.component';
 
 @Component({
   selector: 'app-ads-block',
   standalone: true,
-  imports: [CommonModule, CardModule, ProgressSpinnerModule],
+  imports: [CommonModule, CardModule, ProgressSpinnerModule, AdBannerComponent],
   templateUrl: './ads-block.component.html',
   styleUrl: './ads-block.component.scss'
 })

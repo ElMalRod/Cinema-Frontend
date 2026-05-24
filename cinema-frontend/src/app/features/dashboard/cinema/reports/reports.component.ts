@@ -1,6 +1,7 @@
 ﻿import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AdBannerComponent } from '../../../../shared/components/ad-banner/ad-banner.component';
 
 // Core
 import { CinemaReportsService } from '../../../../core/services/reports/cinema-reports.service';
@@ -20,7 +21,7 @@ import { SharedModule } from '../../../../shared/shared.module';
   standalone: true,
   imports: [
     CommonModule, FormsModule, TableModule, ButtonModule, 
-    TabsModule, DatePickerModule, ToastModule, SharedModule
+    TabsModule, DatePickerModule, ToastModule, SharedModule, AdBannerComponent
   ],
   providers: [MessageService, DatePipe],
   templateUrl: './reports.component.html'

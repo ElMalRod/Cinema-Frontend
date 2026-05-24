@@ -28,3 +28,10 @@ export interface AdvertiserDto {
   advertiserName: string;
   totalAds: number;
 }
+
+export interface AdBlockNowResponse {
+  isBlocked?: boolean; 
+  blocked?: boolean; 
+  message: string;
+  blockEndDate: string;
+}
