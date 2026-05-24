@@ -20,6 +20,8 @@ import { UsersApiService } from '../../../core/services/users-api.service';
 import { SeatResponse, TheaterPricingResponse } from '../../../core/models/cinema.model';
 import { TicketPurchaseRequest, OccupiedSeat } from '../../../core/models/ticket.model';
 
+import { AdBannerComponent } from '../../../shared/components/ad-banner/ad-banner.component';
+
 interface VisualSeat extends SeatResponse {
   status: 'available' | 'occupied' | 'selected';
 }
@@ -38,7 +40,8 @@ interface SeatRow {
     ToastModule, 
     ProgressSpinnerModule, 
     TooltipModule, 
-    DividerModule  
+    DividerModule,
+    AdBannerComponent
   ],
   providers: [MessageService],
   templateUrl: './checkout-seats.component.html',
@@ -176,8 +179,8 @@ export class CheckoutSeatsComponent implements OnInit {
         seatId: seat.id,
         roomId: this.checkoutData.theaterId,
         movieId: this.checkoutData.movieId,
-        companyId: this.checkoutData.companyId,
-        companyName: this.checkoutData.companyName,
+        companyId: this.checkoutData.cinemaId, 
+        companyName: this.checkoutData.cinemaName,
         roomName: this.checkoutData.theaterName,
         movieTitle: this.checkoutData.movieTitle,
         seatRow: seat.rowName,

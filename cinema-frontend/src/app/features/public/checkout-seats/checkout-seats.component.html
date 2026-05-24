@@ -4,6 +4,7 @@
   <div class="checkout-header">
     <p-button icon="pi pi-arrow-left" label="Volver a Horarios" [text]="true" severity="secondary" (onClick)="goBack()"></p-button>    <h2>Selecciona tus asientos</h2>
   </div>
+  <app-ad-banner [cinemaId]="checkoutData?.cinemaId"></app-ad-banner>
 
   @if (loading) {
     <div class="spinner-container flex justify-content-center py-6">
@@ -11,7 +12,7 @@
     </div>
   } @else {
     <div class="checkout-layout">
-      
+    
       <!-- LADO IZQUIERDO: Mapa de Asientos -->
       <div class="seat-map-container">
         

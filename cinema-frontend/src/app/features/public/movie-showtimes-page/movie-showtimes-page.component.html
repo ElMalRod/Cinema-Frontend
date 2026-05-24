@@ -54,6 +54,7 @@
             }
           </div>
         }
+        <app-ad-banner></app-ad-banner>
       </div>
     }
 
@@ -70,6 +71,7 @@
             (onClick)="backToCompanies()"
           />
         </div>
+        <app-ad-banner></app-ad-banner>
         <h2 class="step-title"><i class="pi pi-map-marker"></i> Sucursales de {{ selectedCompany?.name }}</h2>
         @if (cinemas.length === 0) {
           <p class="empty-state">Esta empresa no tiene sucursales disponibles.</p>
@@ -108,6 +110,7 @@
             (onClick)="backToCinemas()"
           />
         </div>
+        <app-ad-banner [cinemaId]="selectedCinema?.id"></app-ad-banner>
         <h2 class="step-title"><i class="pi pi-th-large"></i> Salas en {{ selectedCinema?.name }}</h2>
         @if (theaters.length === 0) {
           <div class="empty-state-box">
@@ -175,6 +178,7 @@
     </ng-template>
 
     <div class="theater-modal-content">
+      <app-ad-banner [cinemaId]="selectedCinema?.id"></app-ad-banner>
 
       <!-- ── Info de la sala ───────────────────────────────────── -->
       <div class="theater-info-bar">

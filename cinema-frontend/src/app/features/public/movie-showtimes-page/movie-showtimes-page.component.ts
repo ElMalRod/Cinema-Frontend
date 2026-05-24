@@ -24,6 +24,8 @@ import {
   TheaterRatingSummary
 } from '../../../core/models/cinema.model';
 
+import { AdBannerComponent } from '../../../shared/components/ad-banner/ad-banner.component';
+
 type ShowtimesStep = 'companies' | 'cinemas' | 'theaters';
 
 @Component({
@@ -39,7 +41,8 @@ type ShowtimesStep = 'companies' | 'cinemas' | 'theaters';
     ProgressSpinnerModule,
     TagModule,
     TextareaModule,
-    RatingModule
+    RatingModule,
+    AdBannerComponent
   ],
   providers: [MessageService],
   templateUrl: './movie-showtimes-page.component.html',
@@ -354,14 +357,21 @@ export class MovieShowtimesPage implements OnInit {
   }
 
   goToSeatSelection(showtime: ShowtimeInfo): void {
-    if (!this.selectedCompany || !this.selectedTheater) return;
+    if (!this.selectedCompany || !this.selectedCinema || !this.selectedTheater) return;
 
     // Empaquetamos toda la data necesaria para la siguiente pantalla
     const checkoutData = {
       movieId: this.movieId,
       movieTitle: this.movieTitle,
-      companyId: this.selectedCompany.id,
-      companyName: this.selectedCompany.name,
+      
+      // La Empresa Padre (por si queremos mostrar el nombre visualmente en el resumen)
+      empresaId: this.selectedCompany.id,
+      empresaName: this.selectedCompany.name,
+      
+      // El Cine/Sucursal (El que el microservicio de Tickets llama "Company")
+      cinemaId: this.selectedCinema.id,
+      cinemaName: this.selectedCinema.name,
+      
       theaterId: this.selectedTheater.id,
       theaterName: this.selectedTheater.name,
       theaterRows: this.selectedTheater.rows,

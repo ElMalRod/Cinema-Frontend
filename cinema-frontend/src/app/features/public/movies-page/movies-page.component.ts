@@ -27,6 +27,8 @@ import {
   PosterItem
 } from '../../../core/models/movie.model';
 
+import { AdBannerComponent } from '../../../shared/components/ad-banner/ad-banner.component';
+
 @Component({
   selector: 'app-movies-page',
   standalone: true,
@@ -41,7 +43,8 @@ import {
     ProgressSpinnerModule,
     TagModule,
     TextareaModule,
-    RatingModule
+    RatingModule,
+    AdBannerComponent
   ],
   providers: [MessageService],
   templateUrl: './movies-page.component.html',
