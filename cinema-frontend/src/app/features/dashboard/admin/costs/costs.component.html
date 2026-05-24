@@ -1,4 +1,6 @@
-﻿<div class="page-wrapper">
+﻿<p-toast position="top-right" appendTo="body" />
+
+<div class="page-wrapper">
   <p-card styleClass="page-card">
     <ng-template pTemplate="header">
       <div class="page-header">
@@ -6,8 +8,352 @@
         <p class="page-subtitle">{{ subtitle }}</p>
       </div>
     </ng-template>
-    <div class="page-content">
-      <p-progressSpinner *ngIf="false"/>
-    </div>
+
+    @if (loading) {
+      <div class="spinner-center"><p-progressSpinner /></div>
+    } @else {
+      <p-tabs value="0">
+        <p-tablist>
+          <p-tab value="0"><i class="pi pi-dollar tab-icon"></i> Costo Base</p-tab>
+          <p-tab value="1"><i class="pi pi-ban tab-icon"></i> Bloqueo de Anuncios</p-tab>
+          <p-tab value="2"><i class="pi pi-chart-line tab-icon"></i> Costos Operativos</p-tab>
+        </p-tablist>
+
+        <p-tabpanels>
+
+          <!-- ── Tab 1: Costo Base ───────────────────────────────────────── -->
+          <p-tabpanel value="0">
+            <div class="tab-content">
+              @if (globalCostNotFound) {
+                <div class="info-box warning">
+                  <i class="pi pi-exclamation-triangle"></i>
+                  <div>
+                    <strong>No hay costo base configurado.</strong>
+                    <p>Sin este valor, los cines no tendrán un costo de referencia al registrarse.</p>
+                  </div>
+                  <p-button label="Configurar costo" icon="pi pi-plus" (onClick)="openGlobalCostModal()" />
+                </div>
+              } @else {
+                <div class="cost-summary-card">
+                  <div class="cost-summary-info">
+                    <div class="cost-amount">
+                      Q {{ globalCost?.dailyCost | number:'1.2-2' }}<span class="cost-unit"> / día</span>
+                    </div>
+                    <div class="cost-meta">
+                      <i class="pi pi-calendar"></i>
+                      Vigente desde {{ globalCost?.effectiveFrom | date:'dd/MM/yyyy':'UTC' }}
+                    </div>
+                    <p class="cost-desc">
+                      Costo diario por defecto que se aplica a los cines al momento de su creación.
+                    </p>
+                  </div>
+                  <p-button
+                    label="Actualizar costo"
+                    icon="pi pi-pencil"
+                    severity="secondary"
+                    (onClick)="openGlobalCostModal()"
+                  />
+                </div>
+              }
+            </div>
+          </p-tabpanel>
+
+          <!-- ── Tab 2: Bloqueo de Anuncios ─────────────────────────────── -->
+          <p-tabpanel value="1">
+            <div class="tab-content">
+              <div class="filter-bar">
+                <div class="filter-group">
+                  <label class="filter-label">Compañía:</label>
+                  <p-select
+                    [options]="companyOptionsAdBlock"
+                    optionLabel="label"
+                    optionValue="value"
+                    [(ngModel)]="filterCompanyAdBlock"
+                    placeholder="Todas las compañías"
+                    [showClear]="true"
+                    styleClass="company-select"
+                  />
+                </div>
+              </div>
+
+              @if (filteredAdBlockRows.length === 0) {
+                <div class="empty-state">
+                  <i class="pi pi-building" style="font-size:2.5rem;color:var(--color-secondary)"></i>
+                  <p>No hay cines registrados.</p>
+                </div>
+              } @else {
+                <div class="cost-list">
+                  @for (row of filteredAdBlockRows; track row.cinemaId) {
+                    <div class="cost-row">
+                      <div class="cost-row-info">
+                        <span class="cost-row-name">{{ row.cinemaName }}</span>
+                        <span class="cost-row-meta">{{ row.companyName }} · {{ row.cinemaLocation }}</span>
+                      </div>
+                      <div class="cost-row-value">
+                        @if (row.hasPricing) {
+                          <span class="price-badge">Q {{ row.pricePerDay | number:'1.2-2' }}/día</span>
+                          <span class="updated-at">Act. {{ row.updatedAt | date:'dd/MM/yyyy' }}</span>
+                        } @else {
+                          <p-tag value="Sin configurar" severity="warn" />
+                        }
+                      </div>
+                      <div class="cost-row-action">
+                        <p-button
+                          [label]="row.hasPricing ? 'Editar' : 'Configurar'"
+                          [icon]="row.hasPricing ? 'pi pi-pencil' : 'pi pi-plus'"
+                          size="small"
+                          severity="secondary"
+                          (onClick)="openAdBlockModal(row)"
+                        />
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </p-tabpanel>
+
+          <!-- ── Tab 3: Costos Operativos ───────────────────────────────── -->
+          <p-tabpanel value="2">
+            <div class="tab-content">
+              <div class="filter-bar">
+                <div class="filter-group">
+                  <label class="filter-label">Compañía:</label>
+                  <p-select
+                    [options]="companyOptionsOpCost"
+                    optionLabel="label"
+                    optionValue="value"
+                    [(ngModel)]="filterCompanyOpCost"
+                    placeholder="Todas las compañías"
+                    [showClear]="true"
+                    styleClass="company-select"
+                  />
+                </div>
+                <p-button
+                  label="Agregar costo operativo"
+                  icon="pi pi-plus"
+                  size="small"
+                  (onClick)="openAddOpCostModal()"
+                />
+              </div>
+
+              @if (filteredOpCostRows.length === 0) {
+                <div class="empty-state">
+                  <i class="pi pi-building" style="font-size:2.5rem;color:var(--color-secondary)"></i>
+                  <p>No hay cines registrados.</p>
+                </div>
+              } @else {
+                <div class="cost-list">
+                  @for (row of filteredOpCostRows; track row.cinemaId) {
+                    <div class="cost-row">
+                      <div class="cost-row-info">
+                        <span class="cost-row-name">{{ row.cinemaName }}</span>
+                        <span class="cost-row-meta">
+                          {{ row.companyName }} · {{ row.records.length }} registro(s)
+                        </span>
+                      </div>
+                      <div class="cost-row-value">
+                        <span class="price-badge total">Q {{ row.totalCost | number:'1.2-2' }} total</span>
+                      </div>
+                      <div class="cost-row-action">
+                        <p-button
+                          label="Ver historial"
+                          icon="pi pi-list"
+                          size="small"
+                          severity="info"
+                          [text]="true"
+                          [disabled]="row.records.length === 0"
+                          [pTooltip]="row.records.length === 0 ? 'Sin registros aún' : ''"
+                          tooltipPosition="left"
+                          (onClick)="openOpCostDetail(row)"
+                        />
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </p-tabpanel>
+
+        </p-tabpanels>
+      </p-tabs>
+    }
   </p-card>
 </div>
+
+<!-- ── Modal: Costo Base ──────────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="showGlobalCostModal"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width:'420px','max-width':'95vw'}"
+  [header]="globalCostNotFound ? 'Configurar costo base' : 'Actualizar costo base'"
+>
+  <div class="form-field">
+    <label>Costo diario (Q) *</label>
+    <p-inputNumber
+      [(ngModel)]="gcForm.dailyCost"
+      mode="decimal"
+      [minFractionDigits]="2"
+      [maxFractionDigits]="2"
+      [min]="0.01"
+      placeholder="0.00"
+      [style]="{width:'100%'}"
+    />
+  </div>
+  <div class="form-field mt-3">
+    <label>Vigente desde *</label>
+    <input type="date" [(ngModel)]="gcForm.effectiveFrom" class="date-input" />
+    <small class="hint">Debe ser hoy o una fecha futura.</small>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" (onClick)="showGlobalCostModal=false" />
+    <p-button
+      label="Guardar"
+      icon="pi pi-check"
+      [loading]="savingGlobalCost"
+      [disabled]="!gcForm.effectiveFrom || !gcForm.dailyCost || gcForm.dailyCost <= 0"
+      (onClick)="submitGlobalCost()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- ── Modal: Precio de Bloqueo de Anuncios ──────────────────────────────── -->
+<p-dialog
+  [(visible)]="showAdBlockModal"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width:'420px','max-width':'95vw'}"
+  [header]="(selectedAdBlockRow?.hasPricing ? 'Editar' : 'Configurar') + ' precio de bloqueo'"
+>
+  @if (selectedAdBlockRow) {
+    <div class="modal-cinema-info">
+      <span class="modal-cinema-name">{{ selectedAdBlockRow.cinemaName }}</span>
+      <span class="modal-cinema-company">{{ selectedAdBlockRow.companyName }} · {{ selectedAdBlockRow.cinemaLocation }}</span>
+    </div>
+  }
+  <div class="form-field mt-3">
+    <label>Precio por día (Q) *</label>
+    <p-inputNumber
+      [(ngModel)]="abForm.pricePerDay"
+      mode="decimal"
+      [minFractionDigits]="2"
+      [maxFractionDigits]="2"
+      [min]="0.01"
+      placeholder="0.00"
+      [style]="{width:'100%'}"
+    />
+    <small class="hint">Monto que el cine paga por día para bloquear anuncios.</small>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" (onClick)="showAdBlockModal=false" />
+    <p-button
+      label="Guardar"
+      icon="pi pi-check"
+      [loading]="savingAdBlock"
+      [disabled]="!abForm.pricePerDay || abForm.pricePerDay <= 0"
+      (onClick)="submitAdBlock()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- ── Modal: Agregar Costo Operativo ────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="showAddOpCostModal"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width:'460px','max-width':'95vw'}"
+  header="Agregar costo operativo"
+>
+  <div class="form-field">
+    <label>Cine *</label>
+    <p-select
+      [options]="cinemaOptions"
+      optionLabel="label"
+      optionValue="value"
+      [(ngModel)]="addOpCostForm.cinemaId"
+      placeholder="Selecciona un cine"
+      [filter]="true"
+      filterPlaceholder="Buscar..."
+      [style]="{width:'100%'}"
+    />
+  </div>
+  <div class="form-field mt-3">
+    <label>Costo diario (Q) *</label>
+    <p-inputNumber
+      [(ngModel)]="addOpCostForm.dailyCost"
+      mode="decimal"
+      [minFractionDigits]="2"
+      [maxFractionDigits]="2"
+      [min]="0.01"
+      placeholder="0.00"
+      [style]="{width:'100%'}"
+    />
+  </div>
+  <div class="form-field mt-3">
+    <label>Vigente desde *</label>
+    <input type="date" [(ngModel)]="addOpCostForm.effectiveFrom" class="date-input" />
+    <small class="hint">
+      Los días activos se calculan desde esta fecha hasta que se registre un nuevo costo o hasta hoy.
+      Debe ser hoy o una fecha futura.
+    </small>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" (onClick)="showAddOpCostModal=false" />
+    <p-button
+      label="Registrar"
+      icon="pi pi-check"
+      [loading]="savingOpCost"
+      [disabled]="!addOpCostForm.cinemaId || !addOpCostForm.effectiveFrom || !addOpCostForm.dailyCost || addOpCostForm.dailyCost <= 0"
+      (onClick)="submitOpCost()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- ── Modal: Historial de Costos Operativos ─────────────────────────────── -->
+<p-dialog
+  [(visible)]="showOpCostDetailModal"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width:'580px','max-width':'95vw'}"
+  [header]="'Historial — ' + (selectedOpCostRow?.cinemaName ?? '')"
+>
+  @if (selectedOpCostRow) {
+    <div class="op-cost-detail">
+      <div class="op-cost-total">
+        <span>Costo total acumulado</span>
+        <span class="op-cost-total-value">Q {{ selectedOpCostRow.totalCost | number:'1.2-2' }}</span>
+      </div>
+
+      @if (selectedOpCostRow.records.length === 0) {
+        <div class="empty-state" style="padding:1.5rem">
+          <p>Este cine no tiene registros de costos operativos.</p>
+        </div>
+      } @else {
+        <div class="op-cost-records">
+          @for (rec of selectedOpCostRow.records; track rec.effectiveFrom) {
+            <div class="op-cost-record">
+              <div class="record-date">
+                <i class="pi pi-calendar"></i>
+                Desde {{ rec.effectiveFrom | date:'dd/MM/yyyy':'UTC' }}
+              </div>
+              <div class="record-detail">
+                <span class="record-rate">Q {{ rec.dailyCost | number:'1.2-2' }}/día</span>
+                <span class="record-days">× {{ rec.activeDays }} días</span>
+                <span class="record-period-cost">= Q {{ rec.periodCost | number:'1.2-2' }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button label="Cerrar" severity="secondary" (onClick)="showOpCostDetailModal=false" />
+  </ng-template>
+</p-dialog>
+

@@ -5,11 +5,17 @@ import { environment } from '../../../environments/environment';
 import {
   AdminShowtime,
   AdminTheater,
+  AdBlockPricingPayload,
+  AdBlockPricingResponse,
   CinemaDetail,
+  CinemaOperatingCostSummary,
   CompanyOption,
   CinemaSummary,
+  CreateGlobalCostPayload,
+  CreateOperatingCostPayload,
   CreateShowtimePayload,
   CreateTheaterPayload,
+  GlobalCostResponse,
   TheaterInfo,
   TheaterComment,
   TheaterRatingSummary,
@@ -181,5 +187,39 @@ export class CinemaApiService {
 
   updateShowtime(showtimeId: string, payload: UpdateShowtimePayload): Observable<void> {
     return this.http.patch<void>(`${this.base}/showtimes/${showtimeId}`, payload);
+  }
+
+  // ── System Admin: GlobalCost ────────────────────────────────────────────
+
+  getLatestGlobalCost(): Observable<GlobalCostResponse> {
+    return this.http.get<GlobalCostResponse>(`${this.base}/global-costs`);
+  }
+
+  createGlobalCost(payload: CreateGlobalCostPayload): Observable<void> {
+    return this.http.post<void>(`${this.base}/global-costs`, payload);
+  }
+
+  // ── System Admin: AdBlockPricing ────────────────────────────────────────
+
+  getAllAdBlockPricings(): Observable<AdBlockPricingResponse[]> {
+    return this.http.get<AdBlockPricingResponse[]>(`${this.base}/ad-block-pricing/cinemas`);
+  }
+
+  createAdBlockPricing(cinemaId: string, payload: AdBlockPricingPayload): Observable<AdBlockPricingResponse> {
+    return this.http.post<AdBlockPricingResponse>(`${this.base}/ad-block-pricing/cinemas/${cinemaId}`, payload);
+  }
+
+  updateAdBlockPricing(cinemaId: string, payload: AdBlockPricingPayload): Observable<AdBlockPricingResponse> {
+    return this.http.put<AdBlockPricingResponse>(`${this.base}/ad-block-pricing/cinemas/${cinemaId}`, payload);
+  }
+
+  // ── System Admin: OperatingCost ─────────────────────────────────────────
+
+  getAllOperatingCostSummaries(): Observable<CinemaOperatingCostSummary[]> {
+    return this.http.get<CinemaOperatingCostSummary[]>(`${this.base}/operating-costs`);
+  }
+
+  createOperatingCost(payload: CreateOperatingCostPayload): Observable<void> {
+    return this.http.post<void>(`${this.base}/operating-costs`, payload);
   }
 }
