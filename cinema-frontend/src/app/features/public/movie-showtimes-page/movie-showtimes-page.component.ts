@@ -232,11 +232,12 @@ export class MovieShowtimesPage implements OnInit {
   submitComment(): void {
     if (!this.selectedTheater || !this.newCommentContent.trim() || !this.currentUserId) return;
     this.submittingComment = true;
-    this.cinemaApi.createTheaterComment(this.selectedTheater.id, this.currentUserId, this.newCommentContent.trim()).subscribe({
-      next: c => {
-        this.comments = [c, ...this.comments];
+    const theaterId = this.selectedTheater.id;
+    this.cinemaApi.createTheaterComment(theaterId, this.currentUserId, this.newCommentContent.trim()).subscribe({
+      next: () => {
         this.newCommentContent = '';
         this.submittingComment = false;
+        this.reloadComments(theaterId);
         this.messageService.add({ severity: 'success', summary: 'Comentario publicado' });
       },
       error: (err: HttpErrorResponse) => {
@@ -291,11 +292,12 @@ export class MovieShowtimesPage implements OnInit {
   submitRating(): void {
     if (!this.selectedTheater || !this.newScore || !this.currentUserId) return;
     this.submittingRating = true;
-    this.cinemaApi.createTheaterRating(this.selectedTheater.id, this.currentUserId, this.newScore).subscribe({
-      next: summary => {
-        this.ratingSummary = summary;
+    const theaterId = this.selectedTheater.id;
+    this.cinemaApi.createTheaterRating(theaterId, this.currentUserId, this.newScore).subscribe({
+      next: () => {
         this.newScore = 0;
         this.submittingRating = false;
+        this.reloadRatings(theaterId);
         this.messageService.add({ severity: 'success', summary: 'Calificación enviada' });
       },
       error: (err: HttpErrorResponse) => {
@@ -311,11 +313,12 @@ export class MovieShowtimesPage implements OnInit {
   }
 
   saveEditRating(ratingId: string): void {
-    if (!this.editScore || !this.currentUserId) return;
+    if (!this.editScore || !this.currentUserId || !this.selectedTheater) return;
+    const theaterId = this.selectedTheater.id;
     this.cinemaApi.updateTheaterRating(ratingId, this.currentUserId, this.editScore).subscribe({
-      next: summary => {
-        this.ratingSummary = summary;
+      next: () => {
         this.cancelEditRating();
+        this.reloadRatings(theaterId);
         this.messageService.add({ severity: 'success', summary: 'Calificación actualizada' });
       },
       error: (err: HttpErrorResponse) => this.messageService.add({ severity: 'error', summary: 'Error', detail: this.extractError(err, 'No se pudo actualizar.') })
@@ -325,6 +328,20 @@ export class MovieShowtimesPage implements OnInit {
   cancelEditRating(): void {
     this.editingRatingId = null;
     this.editScore = 0;
+  }
+
+  private reloadComments(theaterId: string): void {
+    this.cinemaApi.getTheaterComments(theaterId).subscribe({
+      next: c => this.comments = c,
+      error: () => {}
+    });
+  }
+
+  private reloadRatings(theaterId: string): void {
+    this.cinemaApi.getTheaterRatings(theaterId).subscribe({
+      next: r => this.ratingSummary = r,
+      error: () => {}
+    });
   }
 
   private resetRatingForm(): void {

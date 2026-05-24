@@ -195,27 +195,17 @@
                 allowfullscreen
               ></iframe>
             </div>
-            @if (isAuthenticated) {
-              <div class="showtimes-cta">
-                <p-button
-                  label="Ver Funciones"
-                  icon="pi pi-ticket"
-                  severity="success"
-                  (onClick)="goToShowtimes()"
-                />
-                <span class="cta-hint">Consulta cines y horarios disponibles</span>
-              </div>
-            }
           </div>
-        } @else if (isAuthenticated) {
-          <div class="showtimes-cta">
+        }
+
+        @if (isAuthenticated) {
+          <div class="detail-section">
             <p-button
               label="Ver Funciones"
-              icon="pi pi-ticket"
-              severity="success"
+              icon="pi pi-calendar"
+              styleClass="w-full"
               (onClick)="goToShowtimes()"
             />
-            <span class="cta-hint">Consulta cines y horarios disponibles</span>
           </div>
         }
 
@@ -267,45 +257,7 @@
           <p class="no-data">Sin calificaciones aún.</p>
         }
 
-        <!-- mi calificación -->
-        @if (isClient) {
-          @if (myRating) {
-            <div class="my-rating-box">
-              <p class="my-rating-label">Tu calificación</p>
-              @if (editingRatingId === myRating.id) {
-                <div class="rating-form">
-                  <p-rating [(ngModel)]="editScore" />
-                  <div class="form-actions">
-                    <p-button label="Guardar" size="small" (onClick)="saveEditRating(myRating.id)" [loading]="submittingRating" />
-                    <p-button label="Cancelar" size="small" severity="secondary" [outlined]="true" (onClick)="cancelEditRating()" />
-                  </div>
-                </div>
-              } @else {
-                <div class="stars-row">
-                  @for (star of starsArray(5); track star) {
-                    <i class="pi pi-star-fill star-icon" [class.active]="star <= myRating.score"></i>
-                  }
-                  <span class="score-badge">{{ myRating.score }}/5</span>
-                  <p-button icon="pi pi-pencil" [text]="true" size="small" (onClick)="startEditRating(myRating)" />
-                </div>
-              }
-            </div>
-          } @else {
-            <div class="rating-form">
-              <p class="my-rating-label">Califica esta película</p>
-              <p-rating [(ngModel)]="newScore" />
-              <p-button
-                label="Enviar calificación"
-                icon="pi pi-send"
-                [disabled]="!newScore"
-                [loading]="submittingRating"
-                (onClick)="submitRating()"
-              />
-            </div>
-          }
-        } @else {
-          <p class="auth-hint"><i class="pi pi-lock"></i> Inicia sesión para calificar.</p>
-        }
+
 
         <!-- lista de calificaciones -->
         @if (ratingSummary && ratingSummary.ratings.length > 0) {
@@ -326,6 +278,46 @@
           </div>
         }
 
+        <!-- mi calificación -->
+        @if (isClient) {
+          <div class="my-rating-section">
+            <h4>Mi calificación</h4>
+            @if (myRating) {
+              @if (editingRatingId === myRating.id) {
+                <div class="rating-edit-form">
+                  <p-rating [(ngModel)]="editScore" [stars]="5" />
+                  <div class="form-actions">
+                    <p-button label="Guardar" size="small" (onClick)="saveEditRating(myRating.id)" />
+                    <p-button label="Cancelar" size="small" severity="secondary" [outlined]="true" (onClick)="cancelEditRating()" />
+                  </div>
+                </div>
+              } @else {
+                <div class="my-rating-display">
+                  <div class="stars-mini">
+                    @for (star of starsArray(5); track star) {
+                      <i class="pi pi-star-fill star-mini" [class.active]="star <= myRating.score"></i>
+                    }
+                  </div>
+                  <p-button icon="pi pi-pencil" size="small" [text]="true" (onClick)="startEditRating(myRating)" />
+                </div>
+              }
+            } @else {
+              <div class="rating-form">
+                <p-rating [(ngModel)]="newScore" [stars]="5" />
+                <p-button
+                  label="Enviar"
+                  size="small"
+                  [disabled]="!newScore || submittingRating"
+                  [loading]="submittingRating"
+                  (onClick)="submitRating()"
+                />
+              </div>
+            }
+          </div>
+        } @else if (!isAuthenticated) {
+          <p class="auth-hint"><i class="pi pi-lock"></i> Inicia sesión para calificar</p>
+        }
+
         </div><!-- /detail-ratings -->
       </div><!-- /detail-right-col -->
     </div><!-- /detail-layout -->
@@ -340,19 +332,20 @@
             pTextarea
             [autoResize]="true"
             rows="3"
-            placeholder="Escribe tu comentario..."
+            placeholder="Escribe un comentario..."
             [(ngModel)]="newCommentContent"
           ></textarea>
           <p-button
-            label="Publicar comentario"
+            label="Publicar"
             icon="pi pi-send"
-            [disabled]="!newCommentContent.trim()"
+            size="small"
+            [disabled]="!newCommentContent.trim() || submittingComment"
             [loading]="submittingComment"
             (onClick)="submitComment()"
           />
         </div>
-      } @else {
-        <p class="auth-hint"><i class="pi pi-lock"></i> Inicia sesión para comentar.</p>
+      } @else if (!isAuthenticated) {
+        <p class="auth-hint"><i class="pi pi-lock"></i> Inicia sesión para comentar</p>
       }
 
       @if (comments.length === 0) {
@@ -383,8 +376,8 @@
                 <p class="comment-content">{{ comment.content }}</p>
                 @if (comment.userId === currentUserId) {
                   <div class="comment-actions">
-                    <p-button icon="pi pi-pencil" [text]="true" size="small" (onClick)="startEditComment(comment)" />
-                    <p-button icon="pi pi-trash" [text]="true" size="small" severity="danger" (onClick)="deleteComment(comment.id)" />
+                    <p-button icon="pi pi-pencil" size="small" [text]="true" (onClick)="startEditComment(comment)" />
+                    <p-button icon="pi pi-trash" size="small" [text]="true" severity="danger" (onClick)="deleteComment(comment.id)" />
                   </div>
                 }
               }
