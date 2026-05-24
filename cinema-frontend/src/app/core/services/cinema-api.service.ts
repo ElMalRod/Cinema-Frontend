@@ -3,14 +3,22 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
+  AdminShowtime,
+  AdminTheater,
+  CinemaDetail,
   CompanyOption,
   CinemaSummary,
+  CreateShowtimePayload,
+  CreateTheaterPayload,
   TheaterInfo,
   TheaterComment,
   TheaterRatingSummary,
   ShowtimeInfo,
   SeatResponse,
-  TheaterPricingResponse
+  TheaterPricingResponse,
+  TypeTheater,
+  UpdateShowtimePayload,
+  UpdateTheaterPayload
 } from '../models/cinema.model';
 
 /* ── Raw backend response types ─────────────────────────────────────────── */
@@ -122,6 +130,32 @@ export class CinemaApiService {
     return this.http.patch<TheaterRatingSummary>(`${this.base}/ratings/${ratingId}`, { userId, score });
   }
 
+  // ── Admin: Cinema info ─────────────────────────────────────────────────────
+
+  getCinemaByAdmin(adminUserId: string): Observable<CinemaDetail> {
+    return this.http.get<CinemaDetail>(`${this.base}/cinemas/admin/${adminUserId}`);
+  }
+
+  // ── Admin: TypeTheater ─────────────────────────────────────────────────────
+
+  getTypeTheaters(): Observable<TypeTheater[]> {
+    return this.http.get<TypeTheater[]>(`${this.base}/theaters/types`);
+  }
+
+  // ── Admin: Theaters CRUD ───────────────────────────────────────────────────
+
+  getAdminTheaters(cinemaId: string): Observable<AdminTheater[]> {
+    const params = new HttpParams().set('cinemaId', cinemaId);
+    return this.http.get<AdminTheater[]>(`${this.base}/theaters`, { params });
+  }
+
+  createTheater(payload: CreateTheaterPayload): Observable<void> {
+    return this.http.post<void>(`${this.base}/theaters`, payload);
+  }
+
+  updateTheater(theaterId: string, payload: UpdateTheaterPayload): Observable<void> {
+    return this.http.patch<void>(`${this.base}/theaters/${theaterId}`, payload);
+  }
 
   getTheaterSeats(theaterId: string): Observable<SeatResponse[]> {
     return this.http.get<SeatResponse[]>(`${this.base}/theaters/${theaterId}/seats`);
@@ -129,5 +163,23 @@ export class CinemaApiService {
 
   getTheaterPricing(theaterId: string): Observable<TheaterPricingResponse> {
     return this.http.get<TheaterPricingResponse>(`${this.base}/theaters/${theaterId}/pricing`);
+  }
+
+  toggleSeat(seatId: string): Observable<void> {
+    return this.http.patch<void>(`${this.base}/seats/${seatId}/toggle`, {});
+  }
+
+  // ── Admin: Showtimes CRUD ──────────────────────────────────────────────────
+
+  getAdminShowtimes(theaterId: string): Observable<AdminShowtime[]> {
+    return this.http.get<AdminShowtime[]>(`${this.base}/showtimes/theater/${theaterId}`);
+  }
+
+  createShowtime(payload: CreateShowtimePayload): Observable<void> {
+    return this.http.post<void>(`${this.base}/showtimes`, payload);
+  }
+
+  updateShowtime(showtimeId: string, payload: UpdateShowtimePayload): Observable<void> {
+    return this.http.patch<void>(`${this.base}/showtimes/${showtimeId}`, payload);
   }
 }

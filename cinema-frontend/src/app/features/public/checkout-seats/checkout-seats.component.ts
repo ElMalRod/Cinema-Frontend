@@ -1,7 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 // PrimeNG
 import { ButtonModule } from 'primeng/button';
@@ -84,10 +85,12 @@ export class CheckoutSeatsComponent implements OnInit {
     const { theaterId, scheduleId } = this.checkoutData;
 
     // 2. Carga Paralela (ForkJoin) de los 4 endpoints
+    // getOccupiedSeats puede fallar si el ticket-service no está disponible;
+    // en ese caso se asume [] y los asientos se muestran como disponibles.
     forkJoin({
       seats: this.cinemaApi.getTheaterSeats(theaterId),
       pricing: this.cinemaApi.getTheaterPricing(theaterId),
-      occupied: this.ticketsService.getOccupiedSeats(scheduleId),
+      occupied: this.ticketsService.getOccupiedSeats(scheduleId).pipe(catchError(() => of([]))),
       wallet: this.usersApi.getWallet()
     }).subscribe({
       next: ({ seats, pricing, occupied, wallet }) => {
