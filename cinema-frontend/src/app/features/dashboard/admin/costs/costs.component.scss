@@ -6,21 +6,385 @@
   flex-direction: column;
   gap: 1.5rem;
 }
+
 .page-card {
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(26, 50, 99, 0.08);
 }
+
 .page-header {
   padding: 1.5rem 2rem 0;
 }
+
 .page-title {
   font-size: 1.75rem;
   font-weight: 600;
   color: var(--color-primary);
   margin: 0;
 }
+
 .page-subtitle {
   color: var(--color-text-muted, var(--color-secondary));
   margin-top: 0.25rem;
   font-size: 0.95rem;
 }
+
+.spinner-center {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.tab-icon {
+  margin-right: 0.35rem;
+  font-size: 0.9rem;
+}
+
+/* ── Tab content ── */
+.tab-content {
+  padding: 1.25rem 0;
+}
+
+/* ── Info box ── */
+.info-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 10px;
+  flex-wrap: wrap;
+
+  &.warning {
+    background: #fffbeb;
+    border: 1px solid #fbbf24;
+
+    > i {
+      font-size: 1.75rem;
+      color: #f59e0b;
+      flex-shrink: 0;
+    }
+
+    div {
+      flex: 1;
+
+      strong {
+        display: block;
+        color: #92400e;
+        margin-bottom: 0.25rem;
+        font-size: 0.95rem;
+      }
+
+      p {
+        margin: 0;
+        font-size: 0.87rem;
+        color: #78350f;
+      }
+    }
+  }
+}
+
+/* ── Cost summary card ── */
+.cost-summary-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.75rem 2rem;
+  background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%);
+  border-radius: 12px;
+  border: 1px solid #c7d2fe;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.cost-summary-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cost-amount {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--color-primary, #4f46e5);
+  line-height: 1;
+
+  .cost-unit {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #6b7280;
+  }
+}
+
+.cost-meta {
+  font-size: 0.88rem;
+  color: #6b7280;
+
+  i {
+    margin-right: 0.3rem;
+    font-size: 0.82rem;
+  }
+}
+
+.cost-desc {
+  font-size: 0.82rem;
+  color: #9ca3af;
+  margin: 0.25rem 0 0;
+  max-width: 440px;
+}
+
+/* ── Filter bar ── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  padding: 0.85rem 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.filter-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #475569;
+  white-space: nowrap;
+}
+
+/* ── Cost list ── */
+.cost-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cost-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  transition: box-shadow 0.15s;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+  }
+}
+
+.cost-row-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.cost-row-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cost-row-meta {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.cost-row-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  min-width: 150px;
+}
+
+.price-badge {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--color-primary, #4f46e5);
+  background: #ede9fe;
+  padding: 0.2rem 0.75rem;
+  border-radius: 20px;
+  white-space: nowrap;
+
+  &.total {
+    background: #d1fae5;
+    color: #065f46;
+  }
+}
+
+.updated-at {
+  font-size: 0.73rem;
+  color: #94a3b8;
+}
+
+.cost-row-action {
+  min-width: 120px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem;
+  color: var(--color-secondary);
+  text-align: center;
+}
+
+/* ── Form fields (modals) ── */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+  }
+}
+
+.mt-3 {
+  margin-top: 1rem;
+}
+
+.date-input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #334155;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.12);
+  }
+}
+
+.hint {
+  font-size: 0.77rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+/* ── Modal cinema info header ── */
+.modal-cinema-info {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.modal-cinema-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.modal-cinema-company {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin-top: 0.2rem;
+}
+
+/* ── Operating cost detail modal ── */
+.op-cost-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.op-cost-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #166534;
+  font-weight: 500;
+}
+
+.op-cost-total-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.op-cost-records {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.op-cost-record {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 1rem;
+  background: #fafafa;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.record-date {
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 500;
+
+  i {
+    margin-right: 0.35rem;
+    color: var(--color-primary, #4f46e5);
+  }
+}
+
+.record-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.record-rate {
+  font-weight: 500;
+  color: #334155;
+}
+
+.record-days {
+  color: #94a3b8;
+}
+
+.record-period-cost {
+  font-weight: 700;
+  color: #065f46;
+}
+

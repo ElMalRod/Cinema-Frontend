@@ -151,3 +151,48 @@ export interface TheaterPricingResponse {
   price: number;
   effectiveDate: string;
 }
+
+/* ── System Admin: Cost models ───────────────────────────────────────────── */
+
+export interface GlobalCostResponse {
+  dailyCost: number;
+  effectiveFrom: string;
+}
+
+export interface CreateGlobalCostPayload {
+  dailyCost: number;
+  effectiveFrom: string;
+}
+
+export interface AdBlockPricingResponse {
+  id: string;
+  cinemaId: string;
+  cinemaName: string;
+  cinemaLocation: string;
+  pricePerDay: number;
+  updatedAt: string;
+}
+
+export interface AdBlockPricingPayload {
+  pricePerDay: number;
+}
+
+export interface OperatingCostDetail {
+  dailyCost: number;
+  effectiveFrom: string;
+  activeDays: number;
+  periodCost: number;
+}
+
+export interface CinemaOperatingCostSummary {
+  cinemaId: string;
+  cinemaName: string;
+  records: OperatingCostDetail[];
+  totalCost: number;
+}
+
+export interface CreateOperatingCostPayload {
+  cinemaId: string;
+  dailyCost: number;
+  effectiveFrom: string;
+}
