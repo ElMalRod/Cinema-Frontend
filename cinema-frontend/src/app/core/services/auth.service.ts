@@ -267,6 +267,7 @@ export class AuthService {
   private clearSession(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('cinemaId');
     this.currentUserSubject.next(null);
   }
 

@@ -13,6 +13,18 @@ export interface CinemaSummary {
   email: string;
 }
 
+export interface CinemaDetail {
+  id: string;
+  companyId: string;
+  companyName: string;
+  adminCinemaId: string;
+  countryId: string;
+  name: string;
+  address: string;
+  phone: string | null;
+  email: string | null;
+}
+
 export interface ShowtimeInfo {
   id: string;
   versionTypeName: string;
@@ -55,12 +67,79 @@ export interface TheaterRatingSummary {
   averageScore: number | null;
 }
 
+/* ── Admin-only models ────────────────────────────────────────────────────── */
+
+export interface TypeTheater {
+  id: string;
+  name: string;
+}
+
+export interface AdminTheater {
+  id: string;
+  typeTheaterId: string;
+  typeTheaterName: string;
+  name: string;
+  rows: number;
+  cols: number;
+  /** boolean isVisible → Jackson serializa como "visible" */
+  visible: boolean;
+  allowComments: boolean;
+  allowRatings: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
 export interface SeatResponse {
   id: string;
   rowName: string;
   colNumber: number;
   isActive?: boolean;
-  active?: boolean;
+  active: boolean;
+}
+
+export interface AdminShowtime {
+  id: string;
+  movieId: string;
+  versionTypeName: string;
+  dateShowtime: string;
+  startShowtime: string;
+  endShowtime: string;
+  /** boolean isActive → Jackson serializa como "active" */
+  active: boolean;
+  alert: string | null;
+}
+
+export interface CreateTheaterPayload {
+  cinemaId: string;
+  typeTheaterId: string;
+  name: string;
+  rows: number;
+  cols: number;
+}
+
+export interface UpdateTheaterPayload {
+  typeTheaterId: string;
+  name: string;
+  isVisible: boolean;
+  allowComments: boolean;
+  allowRatings: boolean;
+}
+
+export interface CreateShowtimePayload {
+  theaterId: string;
+  movieId: string;
+  versionType: string;
+  dateShowtime: string;
+  startShowtime: string;
+  endShowtime: string;
+}
+
+export interface UpdateShowtimePayload {
+  movieId: string;
+  versionType: string;
+  dateShowtime: string;
+  startShowtime: string;
+  endShowtime: string;
 }
 
 export interface TheaterPricingResponse {

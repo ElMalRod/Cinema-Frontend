@@ -1,13 +1,355 @@
-﻿<div class="page-wrapper">
+﻿<p-toast position="top-right" appendTo="body" />
+
+<div class="page-wrapper">
   <p-card styleClass="page-card">
     <ng-template pTemplate="header">
       <div class="page-header">
-        <h1 class="page-title">{{ title }}</h1>
-        <p class="page-subtitle">{{ subtitle }}</p>
+        <div class="header-row">
+          <div>
+            <h1 class="page-title">{{ title }}</h1>
+            <p class="page-subtitle">{{ subtitle }}</p>
+          </div>
+          <p-button
+            label="Nueva función"
+            icon="pi pi-plus"
+            [disabled]="!selectedTheaterId || loadingMovies"
+            (onClick)="openCreate()"
+          />
+        </div>
       </div>
     </ng-template>
+
     <div class="page-content">
-      <p-progressSpinner *ngIf="false"/>
+      <!-- Filtros: sala + fecha + estado -->
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label class="filter-label">Sala:</label>
+          @if (loadingTheaters) {
+            <p-progressSpinner [style]="{width:'28px',height:'28px'}" />
+          } @else {
+            <p-select
+              [options]="theaterOptions"
+              optionLabel="label"
+              optionValue="value"
+              [(ngModel)]="selectedTheaterId"
+              placeholder="Selecciona una sala"
+              styleClass="theater-select"
+              (ngModelChange)="onTheaterChange()"
+            />
+          }
+        </div>
+        @if (selectedTheaterId) {
+          <div class="filter-group">
+            <label class="filter-label">Fecha:</label>
+            <input type="date" [(ngModel)]="filterDate" class="date-input filter-date" />
+            @if (filterDate) {
+              <button class="clear-filter-btn" (click)="filterDate=''" title="Limpiar fecha">
+                <i class="pi pi-times"></i>
+              </button>
+            }
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Estado:</label>
+            <div class="status-tabs">
+              <button class="status-tab" [class.active]="filterStatus==='all'" (click)="filterStatus='all'">Todas</button>
+              <button class="status-tab active-tab" [class.active]="filterStatus==='active'" (click)="filterStatus='active'">Activas</button>
+              <button class="status-tab inactive-tab" [class.active]="filterStatus==='inactive'" (click)="filterStatus='inactive'">Inactivas</button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Contenido -->
+      @if (!selectedTheaterId) {
+        <div class="empty-state">
+          <i class="pi pi-building" style="font-size:3rem;color:var(--color-secondary)"></i>
+          <p>Selecciona una sala para ver sus funciones</p>
+        </div>
+      } @else if (loadingShowtimes || loadingMovies) {
+        <div class="spinner-center"><p-progressSpinner /></div>
+      } @else if (filteredShowtimes.length === 0) {
+        <div class="empty-state">
+          <i class="pi pi-calendar-times" style="font-size:3rem;color:var(--color-secondary)"></i>
+          <p>{{ showtimes.length === 0 ? 'No hay funciones registradas en esta sala.' : 'No hay funciones con los filtros aplicados.' }}</p>
+        </div>
+      } @else {
+        <div class="showtimes-list">
+          @for (s of filteredShowtimes; track s.id) {
+            <div class="showtime-card" [class.inactive]="!s.active">
+              <!-- Poster -->
+              <div class="showtime-poster">
+                @if (s.moviePoster) {
+                  <img [src]="s.moviePoster" [alt]="s.movieTitle" />
+                } @else {
+                  <div class="no-poster"><i class="pi pi-film"></i></div>
+                }
+              </div>
+              <!-- Info -->
+              <div class="showtime-info">
+                <div class="showtime-title-row">
+                  <span class="showtime-movie">{{ s.movieTitle ?? 'Película no disponible' }}</span>
+                  <p-tag
+                    [value]="s.active ? 'Activa' : 'Inactiva'"
+                    [severity]="s.active ? 'success' : 'secondary'"
+                  />
+                </div>
+                @if (s.movieClassification) {
+                  <span class="classification-badge">{{ s.movieClassification }}</span>
+                }
+                <div class="showtime-meta">
+                  <span><i class="pi pi-calendar"></i> {{ s.dateShowtime | date:'dd/MM/yyyy':'UTC' }}</span>
+                  <span><i class="pi pi-clock"></i> {{ s.startShowtime }} – {{ s.endShowtime }}</span>
+                  <span><i class="pi pi-language"></i> {{ formatVersion(s.versionTypeName) }}</span>
+                  @if (s.movieDuration) {
+                    <span><i class="pi pi-hourglass"></i> {{ s.movieDuration }} min</span>
+                  }
+                </div>
+                @if (s.alert) {
+                  <div class="alert-badge"><i class="pi pi-exclamation-triangle"></i> {{ s.alert }}</div>
+                }
+              </div>
+              <!-- Acciones -->
+              <div class="showtime-actions">
+                <p-button
+                  icon="pi pi-th-large"
+                  size="small"
+                  severity="info"
+                  [text]="true"
+                  pTooltip="Ver mapa de asientos"
+                  tooltipPosition="left"
+                  (onClick)="openSeatMap(s)"
+                />
+                @if (s.active) {
+                  <p-button
+                    icon="pi pi-pencil"
+                    size="small"
+                    severity="secondary"
+                    [text]="true"
+                    (onClick)="openEdit(s)"
+                  />
+                } @else {
+                  <span class="no-edit-hint" title="Las funciones inactivas no se pueden editar">
+                    <i class="pi pi-lock" style="color:#94a3b8;font-size:1rem"></i>
+                  </span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
     </div>
   </p-card>
 </div>
+
+<!-- ── Modal Crear Función ─────────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="showCreateModal"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width:'540px','max-width':'95vw'}"
+  header="Nueva función"
+>
+  <!-- Película -->
+  <div class="movie-picker-row">
+    <label>Película *</label>
+    @if (createForm.movieId) {
+      <div class="selected-movie-preview">
+        @if (getMoviePoster(createForm.movieId)) {
+          <img [src]="getMoviePoster(createForm.movieId)!" class="preview-poster" />
+        }
+        <span class="preview-title">{{ getMovieTitle(createForm.movieId) }}</span>
+        <p-button label="Cambiar" size="small" severity="secondary" (onClick)="openMoviePicker('create')" />
+      </div>
+    } @else {
+      <p-button label="Seleccionar película" icon="pi pi-film" severity="secondary" (onClick)="openMoviePicker('create')" />
+    }
+  </div>
+
+  <div class="form-grid-2">
+    <div class="form-field">
+      <label>Versión *</label>
+      <p-select [options]="versionOptions" optionLabel="label" optionValue="value" [(ngModel)]="createForm.versionType" />
+    </div>
+    <div class="form-field">
+      <label>Fecha *</label>
+      <input type="date" [(ngModel)]="createForm.dateShowtime" class="date-input" />
+    </div>
+    <div class="form-field">
+      <label>Hora inicio *</label>
+      <input type="time" [(ngModel)]="createForm.startShowtime" class="date-input" />
+    </div>
+    <div class="form-field">
+      <label>Hora fin *</label>
+      <input type="time" [(ngModel)]="createForm.endShowtime" class="date-input" />
+    </div>
+  </div>
+
+  @if (durationValidationError) {
+    <div class="validation-error"><i class="pi pi-exclamation-circle"></i> {{ durationValidationError }}</div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" (onClick)="showCreateModal=false" />
+    <p-button
+      label="Crear función"
+      icon="pi pi-check"
+      [loading]="creating"
+      [disabled]="!createForm.movieId || !createForm.dateShowtime || !createForm.startShowtime || !createForm.endShowtime || !!durationValidationError"
+      (onClick)="submitCreate()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- ── Modal Editar Función ─────────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="showEditModal"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width:'540px','max-width':'95vw'}"
+  header="Editar función"
+>
+  <!-- Película -->
+  <div class="movie-picker-row">
+    <label>Película *</label>
+    @if (editForm.movieId) {
+      <div class="selected-movie-preview">
+        @if (getMoviePoster(editForm.movieId)) {
+          <img [src]="getMoviePoster(editForm.movieId)!" class="preview-poster" />
+        }
+        <span class="preview-title">{{ getMovieTitle(editForm.movieId) }}</span>
+        <p-button label="Cambiar" size="small" severity="secondary" (onClick)="openMoviePicker('edit')" />
+      </div>
+    } @else {
+      <p-button label="Seleccionar película" icon="pi pi-film" severity="secondary" (onClick)="openMoviePicker('edit')" />
+    }
+  </div>
+
+  <div class="form-grid-2">
+    <div class="form-field">
+      <label>Versión *</label>
+      <p-select [options]="versionOptions" optionLabel="label" optionValue="value" [(ngModel)]="editForm.versionType" />
+    </div>
+    <div class="form-field">
+      <label>Fecha *</label>
+      <input type="date" [(ngModel)]="editForm.dateShowtime" class="date-input" />
+    </div>
+    <div class="form-field">
+      <label>Hora inicio *</label>
+      <input type="time" [(ngModel)]="editForm.startShowtime" class="date-input" />
+    </div>
+    <div class="form-field">
+      <label>Hora fin *</label>
+      <input type="time" [(ngModel)]="editForm.endShowtime" class="date-input" />
+    </div>
+  </div>
+
+  @if (editDurationValidationError) {
+    <div class="validation-error"><i class="pi pi-exclamation-circle"></i> {{ editDurationValidationError }}</div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" (onClick)="showEditModal=false" />
+    <p-button
+      label="Guardar cambios"
+      icon="pi pi-check"
+      [loading]="saving"
+      [disabled]="!editForm.movieId || !editForm.dateShowtime || !editForm.startShowtime || !editForm.endShowtime || !!editDurationValidationError"
+      (onClick)="submitEdit()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- ── Movie Picker Modal ─────────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="showMoviePicker"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width:'720px','max-width':'95vw'}"
+  header="Selecciona una película"
+>
+  <div class="movie-search-bar">
+    <input pInputText [(ngModel)]="movieSearch" placeholder="Buscar película..." class="movie-search-input" />
+  </div>
+  @if (loadingMovies) {
+    <div class="spinner-center"><p-progressSpinner /></div>
+  } @else {
+    <div class="movies-picker-grid">
+      @for (movie of filteredMovies; track movie.id) {
+        <div class="movie-picker-card" (click)="selectMovie(movie)">
+          <div class="picker-poster">
+            @if (movie.poster) {
+              <img [src]="movie.poster" [alt]="movie.title" />
+            } @else {
+              <div class="no-poster-sm"><i class="pi pi-film"></i></div>
+            }
+          </div>
+          <div class="picker-info">
+            <span class="picker-title">{{ movie.title }}</span>
+            @if (movie.classifications.length) {
+              <span class="picker-classification">{{ movie.classifications[0].name }}</span>
+            }
+            <span class="picker-duration"><i class="pi pi-hourglass"></i> {{ movie.duration }} min</span>
+          </div>
+        </div>
+      }
+      @if (filteredMovies.length === 0) {
+        <p class="empty-text">No se encontraron películas.</p>
+      }
+    </div>
+  }
+</p-dialog>
+
+<!-- ── Modal Mapa de Asientos ────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="showSeatMapModal"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width:'740px','max-width':'96vw'}"
+  [header]="selectedShowtimeForMap ? (selectedShowtimeForMap.movieTitle ?? 'Función') + ' — ' + (selectedShowtimeForMap.dateShowtime | date:'dd/MM/yyyy':'UTC') + ' ' + selectedShowtimeForMap.startShowtime : 'Mapa de asientos'"
+>
+  @if (seatMapLoading) {
+    <div class="spinner-center"><p-progressSpinner /></div>
+  } @else if (seatRows.length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-info-circle" style="font-size:2rem;color:var(--color-secondary)"></i>
+      <p>No hay asientos registrados en esta sala.</p>
+    </div>
+  } @else {
+    <div class="seat-map-wrapper">
+      <div class="screen-indicator">
+        <div class="screen">PANTALLA</div>
+      </div>
+      <div class="seat-grid">
+        @for (row of seatRows; track row.rowName) {
+          <div class="seat-row">
+            <span class="row-label">{{ row.rowName }}</span>
+            <div class="seats-wrapper">
+              @for (seat of row.seats; track seat.id) {
+                <div
+                  class="seat-btn"
+                  [ngClass]="seat.status"
+                  [pTooltip]="'Fila ' + seat.rowName + ' - Asiento ' + seat.colNumber"
+                  tooltipPosition="top">
+                  {{ seat.colNumber }}
+                </div>
+              }
+            </div>
+            <span class="row-label">{{ row.rowName }}</span>
+          </div>
+        }
+      </div>
+      <div class="seat-legend">
+        <div class="legend-item"><div class="seat-btn available"></div> Disponible</div>
+        <div class="legend-item"><div class="seat-btn occupied"></div> Ocupado / Inactivo</div>
+      </div>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button label="Cerrar" severity="secondary" (onClick)="showSeatMapModal=false" />
+  </ng-template>
+</p-dialog>
+
