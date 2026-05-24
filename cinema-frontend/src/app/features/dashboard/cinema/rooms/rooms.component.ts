@@ -13,9 +13,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { MessageService } from 'primeng/api';
-import { catchError, of, switchMap } from 'rxjs';
+import { tap, catchError, of, switchMap } from 'rxjs';
 import { CinemaApiService } from '../../../../core/services/cinema-api.service';
 import { AuthService } from '../../../../core/services/auth.service';
+
+import { AdBannerComponent } from '../../../../shared/components/ad-banner/ad-banner.component';
+
 import {
   AdminTheater,
   CreateTheaterPayload,
@@ -40,7 +43,8 @@ interface SeatCell {
     CommonModule, FormsModule,
     CardModule, ButtonModule, DialogModule, ToastModule,
     ProgressSpinnerModule, TagModule, SelectModule,
-    InputTextModule, InputNumberModule, ToggleSwitchModule
+    InputTextModule, InputNumberModule, ToggleSwitchModule,
+    AdBannerComponent
   ],
   providers: [MessageService],
   templateUrl: './rooms.component.html',
@@ -53,6 +57,8 @@ export class RoomsComponent implements OnInit {
   loading = false;
   theaters: AdminTheater[] = [];
   typeTheaters: TypeTheater[] = [];
+
+  cinemaId: string | null = null;
 
   // Detail modal
   showDetailModal = false;
@@ -101,6 +107,7 @@ export class RoomsComponent implements OnInit {
     });
 
     this.resolveCinemaId().pipe(
+      tap(cinemaId => this.cinemaId = cinemaId ?? null), 
       switchMap(cinemaId => {
         if (!cinemaId) return of(null);
         return this.cinemaApi.getAdminTheaters(cinemaId);

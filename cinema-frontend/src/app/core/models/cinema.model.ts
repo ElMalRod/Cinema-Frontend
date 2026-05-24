@@ -196,3 +196,19 @@ export interface CreateOperatingCostPayload {
   dailyCost: number;
   effectiveFrom: string;
 }
+
+export interface AdBlockRequest {
+  daysBlocked: number;
+}
+
+export interface AdBlockResponse {
+  id: string;
+  cinemaId: string;
+  cinemaName: string;
+  daysBlocked: number;
+  startDate: string;
+  endDate: string;
+  amountPaid: number;
+  createdAt: string;
+}
+

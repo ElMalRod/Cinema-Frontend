@@ -69,4 +69,11 @@ export class AdDisplayService {
       catchError(() => of(false)) // Si el endpoint falla, asumimos que NO está bloqueado
     );
   }
+
+  /**
+   * 4. Limpia la caché de un cine específico 
+   */
+  clearCinemaCache(cinemaId: string): void {
+    this.blockedCinemasCache.delete(cinemaId);
+  }
 }

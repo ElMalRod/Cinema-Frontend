@@ -1,14 +1,114 @@
-﻿<app-ad-banner></app-ad-banner>
-<div class="page-wrapper">
-  <p-card styleClass="page-card">
-    <ng-template pTemplate="header">
-      <div class="page-header">
-        <h1 class="page-title">{{ title }}</h1>
-        <p class="page-subtitle">{{ subtitle }}</p>
+﻿<p-toast position="top-right"></p-toast>
+
+<div class="fade-in">
+  <app-shared-card title="Ocultación de Anuncios" footer="Gestiona la visibilidad de publicidad en tu cine">
+    
+    @if (cinemaId) {
+      <app-ad-banner [cinemaId]="cinemaId"></app-ad-banner>
+    }
+
+    @if (loading) {
+      <div class="flex justify-content-center py-6">
+        <p-progressSpinner strokeWidth="4"></p-progressSpinner>
       </div>
-    </ng-template>
-    <div class="page-content">
-      <p-progressSpinner *ngIf="false"/>
-    </div>
-  </p-card>
+    } @else if (!cinemaId) {
+      <div class="text-center py-5 text-gray-500">
+        <i class="pi pi-exclamation-triangle text-4xl mb-3"></i>
+        <p>No se pudo determinar la sucursal de tu cine.</p>
+      </div>
+    } @else {
+      
+      <div class="grid mt-3">
+        <div class="col-12 md:col-5">
+          
+          <div class="status-card mb-4" [ngClass]="(currentStatus?.isBlocked || currentStatus?.blocked) ? 'status-active' : 'status-inactive'">
+            <div class="flex align-items-center mb-2">
+              <i class="pi text-2xl mr-2" [ngClass]="(currentStatus?.isBlocked || currentStatus?.blocked) ? 'pi-shield text-green-600' : 'pi-megaphone text-orange-500'"></i>
+              <h3 class="m-0">{{ (currentStatus?.isBlocked || currentStatus?.blocked) ? 'Anuncios Bloqueados' : 'Anuncios Visibles' }}</h3>
+            </div>
+            <p class="m-0 text-gray-700">{{ currentStatus?.message }}</p>
+          </div>
+
+          <div class="purchase-box p-4 border-round bg-gray-50 border-1 border-gray-200">
+            <h4 class="mt-0 mb-3 text-xl"><i class="pi pi-shopping-cart mr-2"></i>Comprar Ocultación</h4>
+            
+            <div class="flex justify-content-between mb-3 text-gray-600">
+              <span>Tarifa asignada por el sistema:</span>
+              <span class="font-bold text-primary">Q {{ pricing?.pricePerDay | number:'1.2-2' }} / día</span>
+            </div>
+
+            <div class="field mb-4">
+              <label class="block font-medium mb-2">¿Cuántos días deseas bloquear la publicidad?</label>
+              <p-inputNumber 
+                [(ngModel)]="daysToBlock" 
+                [showButtons]="true" 
+                buttonLayout="horizontal" 
+                spinnerMode="horizontal" 
+                [min]="1" 
+                [max]="365"
+                inputStyleClass="text-center font-bold text-lg w-4rem"
+                decrementButtonClass="p-button-secondary p-button-outlined"
+                incrementButtonClass="p-button-secondary p-button-outlined"
+                incrementButtonIcon="pi pi-plus" 
+                decrementButtonIcon="pi pi-minus">
+              </p-inputNumber>
+            </div>
+
+            <div class="flex justify-content-between align-items-center mb-4 pt-3 border-top-1 border-gray-300">
+              <span class="text-lg">Costo Total Estimado:</span>
+              <span class="text-2xl font-bold">Q {{ totalCost | number:'1.2-2' }}</span>
+            </div>
+
+            <p-button 
+              label="Procesar Pago" 
+              icon="pi pi-check" 
+              styleClass="w-full" 
+              severity="success"
+              [disabled]="daysToBlock < 1"
+              [loading]="processing"
+              (onClick)="purchaseAdBlock()">
+            </p-button>
+          </div>
+
+        </div>
+
+        <div class="col-12 md:col-7">
+          <div class="history-box p-4 border-round border-1 border-gray-200 h-full">
+            <h4 class="mt-0 mb-3 text-xl"><i class="pi pi-history mr-2"></i>Historial de Compras</h4>
+            
+            @if (history.length === 0) {
+              <div class="text-center py-5 text-gray-500">
+                <i class="pi pi-inbox text-4xl mb-3"></i>
+                <p>Aún no has adquirido bloqueos de publicidad.</p>
+              </div>
+            } @else {
+              <p-table [value]="history" [paginator]="true" [rows]="5" styleClass="p-datatable-sm p-datatable-striped" responsiveLayout="scroll">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Fecha Compra</th>
+                    <th>Días</th>
+                    <th>Periodo Cubierto</th>
+                    <th>Total Pagado</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-item>
+                  <tr>
+                    <td>{{ item.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td class="font-bold">{{ item.daysBlocked }}</td>
+                    <td>
+                      <div class="text-xs text-gray-600">
+                        {{ item.startDate | date:'dd/MM/yy' }} - {{ item.endDate | date:'dd/MM/yy' }}
+                      </div>
+                    </td>
+                    <td class="text-green-600 font-bold">Q {{ item.amountPaid | number:'1.2-2' }}</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            }
+          </div>
+        </div>
+      </div>
+
+    }
+  </app-shared-card>
 </div>
