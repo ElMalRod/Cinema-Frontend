@@ -24,3 +24,245 @@
   margin-top: 0.25rem;
   font-size: 0.95rem;
 }
+
+/* ── Tab bar ─────────────────────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--surface-border, #e5e7eb);
+  padding-bottom: 0;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-text-muted, #6b7280);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+
+  &.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+  }
+
+  &:hover:not(.active) {
+    color: var(--color-primary-light, #4b72c7);
+  }
+}
+
+/* ── Filter bar ──────────────────────────────────────────────────────────── */
+.filter-bar {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  align-items: center;
+}
+
+.filter-select {
+  min-width: 200px;
+}
+
+.movie-filter-input {
+  min-width: 280px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--surface-border, #d1d5db);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+/* ── Sections grid ───────────────────────────────────────────────────────── */
+.sections-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.section-card {
+  background: #e4edfc;
+  border: 1px solid #c5d8f8;
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.empty-msg {
+  color: var(--color-text-muted, #9ca3af);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+/* ── Review item ─────────────────────────────────────────────────────────── */
+.review-item {
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--surface-border, #e5e7eb);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.75rem;
+  transition: box-shadow 0.2s;
+
+  &:last-child { margin-bottom: 0; }
+
+  &.editing {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb, 26, 50, 99), 0.1);
+  }
+}
+
+.review-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.theater-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text, #111827);
+}
+
+.cinema-name {
+  font-size: 0.82rem;
+  color: var(--color-text-muted, #6b7280);
+}
+
+.review-date {
+  font-size: 0.78rem;
+  color: var(--color-text-muted, #9ca3af);
+  margin-left: auto;
+}
+
+.review-content {
+  font-size: 0.88rem;
+  color: var(--color-text, #374151);
+  margin: 0.3rem 0 0.5rem;
+  line-height: 1.5;
+}
+
+.review-actions {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+/* ── Stars ───────────────────────────────────────────────────────────────── */
+.stars-row {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin: 0.4rem 0 0.5rem;
+}
+
+.star-filled { color: #f59e0b; font-size: 0.95rem; }
+.star-empty { color: #d1d5db; font-size: 0.95rem; }
+
+.score-label {
+  margin-left: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted, #6b7280);
+}
+
+/* ── Edit form ───────────────────────────────────────────────────────────── */
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.edit-textarea {
+  width: 100%;
+  resize: vertical;
+  font-size: 0.88rem;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* ── Movie meta ──────────────────────────────────────────────────────────── */
+.movie-meta {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+
+.movie-poster-thumb {
+  width: 44px;
+  height: 62px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.movie-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+/* ── Spinner / Error ─────────────────────────────────────────────────────── */
+.spinner-center {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.error-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.retry-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid #dc2626;
+  color: #dc2626;
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+
+  &:hover { background: #fee2e2; }
+}
+
+/* ── Page content ────────────────────────────────────────────────────────── */
+.page-content {
+  padding: 0 1rem 1rem;
+}
+

@@ -67,6 +67,33 @@ export interface TheaterRatingSummary {
   averageScore: number | null;
 }
 
+export interface UserTheaterComment {
+  id: string;
+  content: string;
+  createdAt: string;
+  edited: boolean;
+  theaterId: string;
+  theaterName: string;
+  cinemaId: string;
+  cinemaName: string;
+  cinemaAddress: string;
+  companyId: string;
+  companyName: string;
+}
+
+export interface UserTheaterRating {
+  id: string;
+  score: number;
+  createdAt: string;
+  theaterId: string;
+  theaterName: string;
+  cinemaId: string;
+  cinemaName: string;
+  cinemaAddress: string;
+  companyId: string;
+  companyName: string;
+}
+
 /* ── Admin-only models ────────────────────────────────────────────────────── */
 
 export interface TypeTheater {
