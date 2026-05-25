@@ -7,6 +7,13 @@ export interface MovieSummary {
   classifications: ClassificationDetail[];
 }
 
+export interface MovieBrief {
+  id: string;
+  title: string;
+  poster: string | null;
+  classifications: string[];
+}
+
 export interface ClassificationDetail {
   name: string;
   ageLimit: number;

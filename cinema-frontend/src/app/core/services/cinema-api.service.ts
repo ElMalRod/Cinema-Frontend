@@ -22,6 +22,8 @@ import {
   UserTheaterComment,
   UserTheaterRating,
   ShowtimeInfo,
+  CinemaShowtimeInfo,
+  CinemaTheaterWithShowtimes,
   SeatResponse,
   TheaterPricingResponse,
   TypeTheater,
@@ -105,6 +107,10 @@ export class CinemaApiService {
           }));
       })
     );
+  }
+
+  getTheatersWithShowtimesByCinema(cinemaId: string): Observable<CinemaTheaterWithShowtimes[]> {
+    return this.http.get<CinemaTheaterWithShowtimes[]>(`${this.base}/theaters/cinema/${cinemaId}`);
   }
 
   // ── Comentarios de sala ────────────────────────────────────────────────────

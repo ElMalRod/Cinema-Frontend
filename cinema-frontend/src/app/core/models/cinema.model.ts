@@ -34,6 +34,25 @@ export interface ShowtimeInfo {
   alert: string | null;
 }
 
+export interface CinemaShowtimeInfo {
+  id: string;
+  movieId: string;
+  versionTypeName: string;
+  dateShowtime: string;
+  startShowtime: string;
+  endShowtime: string;
+  alert: string | null;
+}
+
+export interface CinemaTheaterWithShowtimes {
+  id: string;
+  typeTheaterName: string;
+  name: string;
+  rows: number;
+  cols: number;
+  showtimes: CinemaShowtimeInfo[];
+}
+
 export interface TheaterInfo {
   id: string;
   typeTheaterName: string;
