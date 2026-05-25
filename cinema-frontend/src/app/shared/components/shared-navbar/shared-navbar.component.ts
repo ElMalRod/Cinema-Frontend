@@ -24,14 +24,14 @@ export class SharedNavbarComponent implements OnInit {
 
   readonly publicLinks: NavLink[] = [
     { label: 'Inicio', path: '/', icon: 'pi pi-home' },
-    { label: 'Películas', path: '/movies', icon: 'pi pi-video' },
-    { label: 'Cines', path: '/cinemas', icon: 'pi pi-building' }
+    { label: 'Películas', path: '/movies', icon: 'pi pi-video' }
   ];
 
   readonly roleLinks: Record<UserRole, NavLink[]> = {
     CLIENT: [
       { label: 'Boletos', path: '/dashboard/client/tickets', icon: 'pi pi-ticket' },
       { label: 'Cartera', path: '/dashboard/client/wallet', icon: 'pi pi-wallet' },
+      { label: 'Cine', path: '/dashboard/client/cinemas', icon: 'pi pi-building' },
       { label: 'Comentarios', path: '/dashboard/client/comments', icon: 'pi pi-comments' }
     ],
     CINEMA_ADMIN: [

@@ -79,6 +79,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/client/comments/comments.component').then((m) => m.CommentsComponent)
   },
   {
+    path: 'dashboard/client/cinemas',
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['CLIENT'] },
+    loadComponent: () => import('./features/dashboard/client/cinemas/client-cinemas.component').then((m) => m.ClientCinemasComponent)
+  },
+  {
     path: 'dashboard/cinema/rooms',
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['CINEMA_ADMIN'] },

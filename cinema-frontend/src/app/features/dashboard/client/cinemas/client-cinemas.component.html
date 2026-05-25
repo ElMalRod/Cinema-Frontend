@@ -1,0 +1,213 @@
+<p-toast position="top-right" appendTo="body" />
+
+<div class="client-cinemas-page">
+
+  <!-- ── Header ─────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-title">
+      <i class="pi pi-building"></i>
+      <h1>Buscar funciones por cine</h1>
+    </div>
+  </div>
+
+  <!-- ── Breadcrumb ─────────────────────────────────────────────── -->
+  <div class="breadcrumb">
+    <span [class.active]="step === 'companies'">Empresas</span>
+    @if (step === 'cinemas' || step === 'showtimes') {
+      <i class="pi pi-chevron-right"></i>
+      <span [class.active]="step === 'cinemas'">{{ selectedCompany?.name }}</span>
+    }
+    @if (step === 'showtimes') {
+      <i class="pi pi-chevron-right"></i>
+      <span class="active">{{ selectedCinema?.name }}</span>
+    }
+  </div>
+
+  <!-- ── Spinner ────────────────────────────────────────────────── -->
+  @if (loading) {
+    <div class="spinner-container">
+      <p-progressSpinner strokeWidth="4" />
+    </div>
+  } @else {
+
+    <!-- ══ PASO 1: Empresas ══════════════════════════════════════ -->
+    @if (step === 'companies') {
+      <div class="step-section">
+        <h2 class="step-title"><i class="pi pi-building"></i> Selecciona una empresa</h2>
+        @if (companies.length === 0) {
+          <p class="empty-state">No hay empresas disponibles.</p>
+        } @else {
+          <div class="cards-grid">
+            @for (company of companies; track company.id) {
+              <div class="selection-card" (click)="selectCompany(company)">
+                <i class="pi pi-building card-icon"></i>
+                <span class="card-name">{{ company.name }}</span>
+                <i class="pi pi-chevron-right card-arrow"></i>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ══ PASO 2: Sucursales ════════════════════════════════════ -->
+    @if (step === 'cinemas') {
+      <div class="step-section">
+        <div class="step-nav">
+          <p-button
+            icon="pi pi-arrow-left"
+            label="Empresas"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            (onClick)="backToCompanies()"
+          />
+        </div>
+        <h2 class="step-title">
+          <i class="pi pi-map-marker"></i> Sucursales de {{ selectedCompany?.name }}
+        </h2>
+        @if (cinemas.length === 0) {
+          <p class="empty-state">Esta empresa no tiene sucursales disponibles.</p>
+        } @else {
+          <div class="cards-grid">
+            @for (cinema of cinemas; track cinema.id) {
+              <div class="selection-card" (click)="selectCinema(cinema)">
+                <i class="pi pi-map-marker card-icon"></i>
+                <div class="card-info">
+                  <span class="card-name">{{ cinema.name }}</span>
+                  <span class="card-sub"><i class="pi pi-map-marker"></i> {{ cinema.address }}</span>
+                  @if (cinema.phone) {
+                    <span class="card-sub"><i class="pi pi-phone"></i> {{ cinema.phone }}</span>
+                  }
+                </div>
+                <i class="pi pi-chevron-right card-arrow"></i>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ══ PASO 3: Funciones ═════════════════════════════════════ -->
+    @if (step === 'showtimes') {
+      <div class="step-section">
+        <div class="step-nav">
+          <p-button
+            icon="pi pi-arrow-left"
+            label="Sucursales"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            (onClick)="backToCinemas()"
+          />
+        </div>
+        <h2 class="step-title">
+          <i class="pi pi-calendar"></i> Funciones en {{ selectedCinema?.name }}
+        </h2>
+
+        <!-- Filtros -->
+        @if (showtimeCards.length > 0) {
+          <div class="filters-bar">
+            <p-select
+              [options]="dayOptions"
+              [(ngModel)]="filterDay"
+              placeholder="Filtrar por día"
+              [showClear]="true"
+              (onChange)="applyFilters()"
+              (onClear)="applyFilters()"
+            />
+            <p-select
+              [options]="theaterOptions"
+              [(ngModel)]="filterTheaterId"
+              placeholder="Filtrar por sala"
+              [showClear]="true"
+              (onChange)="applyFilters()"
+              (onClear)="applyFilters()"
+            />
+            <p-button
+              label="Limpiar filtros"
+              icon="pi pi-filter-slash"
+              [text]="true"
+              severity="secondary"
+              size="small"
+              (onClick)="clearFilters()"
+            />
+          </div>
+        }
+
+        @if (filteredCards.length === 0) {
+          <p class="empty-state">
+            @if (showtimeCards.length === 0) {
+              No hay funciones disponibles en este cine.
+            } @else {
+              No hay funciones que coincidan con los filtros.
+            }
+          </p>
+        } @else {
+          <div class="showtime-list">
+            @for (card of filteredCards; track card.showtimeId) {
+              <div class="showtime-card">
+                <!-- Poster -->
+                <div class="poster-wrap">
+                  @if (card.moviePoster) {
+                    <img [src]="card.moviePoster" [alt]="card.movieTitle" class="poster-img" />
+                  } @else {
+                    <div class="poster-placeholder">
+                      <i class="pi pi-video"></i>
+                    </div>
+                  }
+                </div>
+
+                <!-- Info -->
+                <div class="card-body">
+                  <div class="movie-info">
+                    <h3 class="movie-title">{{ card.movieTitle }}</h3>
+                    <div class="tags-row">
+                      @for (c of card.movieClassifications; track c) {
+                        <p-tag [value]="c" severity="warning" styleClass="classif-tag" />
+                      }
+                      <p-tag [value]="card.theaterType" severity="secondary" styleClass="type-tag" />
+                      <p-tag [value]="card.versionTypeName" severity="info" styleClass="version-tag" />
+                    </div>
+                  </div>
+
+                  <div class="showtime-meta">
+                    <span class="meta-item">
+                      <i class="pi pi-calendar"></i>
+                      {{ formatDay(card.dateShowtime) }}
+                    </span>
+                    <span class="meta-item">
+                      <i class="pi pi-clock"></i>
+                      {{ card.startShowtime }} – {{ card.endShowtime }}
+                    </span>
+                    <span class="meta-item">
+                      <i class="pi pi-building-columns"></i>
+                      {{ card.theaterName }}
+                    </span>
+                  </div>
+
+                  @if (card.alert) {
+                    <div class="alert-badge">
+                      <i class="pi pi-exclamation-triangle"></i>
+                      {{ card.alert }}
+                    </div>
+                  }
+                </div>
+
+                <!-- Acción -->
+                <div class="card-action">
+                  <p-button
+                    label="Seleccionar"
+                    icon="pi pi-ticket"
+                    (onClick)="selectShowtime(card)"
+                  />
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+  }
+</div>

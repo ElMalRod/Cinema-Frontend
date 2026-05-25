@@ -20,7 +20,8 @@ import {
   RatingSummary,
   UpdateMoviePayload,
   UserMovieComment,
-  UserMovieRating
+  UserMovieRating,
+  MovieBrief
 } from '../models/movie.model';
 
 export const STATIC_COUNTRIES: CountryOption[] = [
@@ -282,5 +283,9 @@ export class MoviesApiService {
 
   getMyMovieRatings(): Observable<UserMovieRating[]> {
     return this.http.get<UserMovieRating[]>(`${this.base}/ratings/user`);
+  }
+
+  getMoviesBrief(ids: string[]): Observable<MovieBrief[]> {
+    return this.http.get<MovieBrief[]>(`${this.base}/movies/brief`, { params: { ids } });
   }
 }
