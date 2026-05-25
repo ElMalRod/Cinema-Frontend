@@ -18,7 +18,7 @@ import {
   CinemaShowtimeInfo
 } from '../../../../core/models/cinema.model';
 import { MovieBrief } from '../../../../core/models/movie.model';
-
+import { AdBannerComponent } from '../../../../shared/components/ad-banner/ad-banner.component';
 type CinemasStep = 'companies' | 'cinemas' | 'showtimes';
 
 interface ShowtimeCard {
@@ -54,7 +54,8 @@ interface SelectOption {
     ProgressSpinnerModule,
     SelectModule,
     TagModule,
-    ToastModule
+    ToastModule,
+    AdBannerComponent
   ],
   providers: [MessageService],
   templateUrl: './client-cinemas.component.html',

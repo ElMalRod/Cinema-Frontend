@@ -30,7 +30,11 @@ import {
   UpdateShowtimePayload,
   UpdateTheaterPayload,
   AdBlockResponse,
-  AdBlockRequest
+  AdBlockRequest,
+  TheaterPrincingRequest,
+  RechargeResponse,
+  CreateWalletTransactionRequest,
+  WalletTransactionResponse
 } from '../models/cinema.model';
 
 /* ── Raw backend response types ─────────────────────────────────────────── */
@@ -254,5 +258,22 @@ export class CinemaApiService {
 
   getAdBlockPricing(cinemaId: string): Observable<AdBlockPricingResponse> {
     return this.http.get<AdBlockPricingResponse>(`${this.base}/ad-block-pricing/cinemas/${cinemaId}`);
+  }
+
+  createTheaterPricing(theaterId: string, payload: TheaterPrincingRequest): Observable<TheaterPricingResponse> {
+    return this.http.post<TheaterPricingResponse>(`${this.base}/theaters/${theaterId}/pricing`, payload);
+  }
+
+  updateTheaterPricing(theaterId: string, payload: TheaterPrincingRequest): Observable<TheaterPricingResponse> {
+    return this.http.put<TheaterPricingResponse>(`${this.base}/theaters/${theaterId}/pricing`, payload);
+  }
+
+
+  getWalletTransactions(adminCinemaId: string): Observable<WalletTransactionResponse[]> {
+    return this.http.get<WalletTransactionResponse[]>(`${this.base}/wallet-transactions/${adminCinemaId}`);
+  }
+
+  createWalletRecharge(payload: CreateWalletTransactionRequest): Observable<RechargeResponse> {
+    return this.http.post<RechargeResponse>(`${this.base}/wallet-transactions`, payload);
   }
 }

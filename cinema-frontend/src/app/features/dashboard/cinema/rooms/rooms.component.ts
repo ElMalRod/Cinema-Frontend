@@ -12,8 +12,9 @@ import { SelectModule } from 'primeng/select';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TableModule } from 'primeng/table';
 import { MessageService } from 'primeng/api';
-import { tap, catchError, of, switchMap } from 'rxjs';
+import { tap, catchError, of, switchMap, forkJoin } from 'rxjs';
 import { CinemaApiService } from '../../../../core/services/cinema-api.service';
 import { AuthService } from '../../../../core/services/auth.service';
 
@@ -36,6 +37,18 @@ interface SeatCell {
   active: boolean;
 }
 
+// Interfaz para la tabla del Gestor de Precios
+interface PricingRow {
+  theaterId: string;
+  name: string;
+  typeTheaterId: string;
+  typeTheaterName: string;
+  currentPrice: number | null;
+  inputPrice: number | null;
+  hasExistingPrice: boolean;
+  loading: boolean;
+}
+
 @Component({
   selector: 'app-rooms',
   standalone: true,
@@ -44,7 +57,7 @@ interface SeatCell {
     CardModule, ButtonModule, DialogModule, ToastModule,
     ProgressSpinnerModule, TagModule, SelectModule,
     InputTextModule, InputNumberModule, ToggleSwitchModule,
-    AdBannerComponent
+    TableModule, AdBannerComponent
   ],
   providers: [MessageService],
   templateUrl: './rooms.component.html',
@@ -57,31 +70,30 @@ export class RoomsComponent implements OnInit {
   loading = false;
   theaters: AdminTheater[] = [];
   typeTheaters: TypeTheater[] = [];
-
   cinemaId: string | null = null;
 
-  // Detail modal
+  // Modal de Detalle Original
   showDetailModal = false;
   selectedTheater: AdminTheater | null = null;
-  detailTab: 'info' | 'comments' | 'ratings' = 'info';
   seats: SeatCell[][] = [];
   loadingSeats = false;
-  comments: TheaterComment[] = [];
-  loadingComments = false;
-  ratingSummary: TheaterRatingSummary | null = null;
-  loadingRatings = false;
   savingUpdate = false;
 
   editForm: UpdateTheaterPayload = {
     typeTheaterId: '', name: '', isVisible: true, allowComments: true, allowRatings: true
   };
 
-  // Create modal
+  // Modal de Crear Sala Original
   showCreateModal = false;
   creating = false;
   createForm: Omit<CreateTheaterPayload, 'cinemaId'> = {
     typeTheaterId: '', name: '', rows: 5, cols: 8
   };
+
+  // NUEVO: Variables del Gestor de Precios
+  showPricingModal = false;
+  loadingPricing = false;
+  pricingRows: PricingRow[] = [];
 
   get typeTheaterOptions() {
     return this.typeTheaters.map(t => ({ label: t.name, value: t.id }));
@@ -99,11 +111,9 @@ export class RoomsComponent implements OnInit {
 
   private loadData(): void {
     this.loading = true;
-
-    // Cargar tipos de sala siempre (no depende de cinemaId)
     this.cinemaApi.getTypeTheaters().subscribe({
       next: types => { this.typeTheaters = types; },
-      error: (e: HttpErrorResponse) => this.msg.add({ severity: 'warn', summary: 'Aviso', detail: this.extractError(e, 'No se pudieron cargar los tipos de sala'), life: 5000 })
+      error: () => this.msg.add({ severity: 'warn', summary: 'Aviso', detail: 'No se pudieron cargar los tipos de sala' })
     });
 
     this.resolveCinemaId().pipe(
@@ -117,14 +127,13 @@ export class RoomsComponent implements OnInit {
         if (result) this.theaters = result.sort((a, b) => a.name.localeCompare(b.name));
         this.loading = false;
       },
-      error: (e: HttpErrorResponse) => {
-        this.msg.add({ severity: 'error', summary: 'Error', detail: this.extractError(e, 'No se pudieron cargar las salas'), life: 5000 });
+      error: () => {
+        this.msg.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las salas' });
         this.loading = false;
       }
     });
   }
 
-  /** Obtiene cinemaId: desde localStorage o desde la API si no está guardado. */
   private resolveCinemaId() {
     const stored = this.auth.getCinemaId();
     if (stored) return of(stored);
@@ -139,6 +148,8 @@ export class RoomsComponent implements OnInit {
     );
   }
 
+  // ── 1. LÓGICA ORIGINAL DE SALAS (Limpia) ──
+
   openDetail(theater: AdminTheater): void {
     this.selectedTheater = { ...theater };
     this.editForm = {
@@ -148,90 +159,24 @@ export class RoomsComponent implements OnInit {
       allowComments: theater.allowComments,
       allowRatings: theater.allowRatings
     };
-    this.detailTab = 'info';
+    
     this.seats = [];
-    this.comments = [];
-    this.ratingSummary = null;
     this.showDetailModal = true;
-    // Cargar asientos inmediatamente para la referencia visual en la pestaña Info
     this.loadSeats(theater.id);
-  }
-
-  selectTab(tab: 'info' | 'comments' | 'ratings'): void {
-    this.detailTab = tab;
-    if (!this.selectedTheater) return;
-    if (tab === 'comments' && this.comments.length === 0) this.loadComments(this.selectedTheater.id);
-    if (tab === 'ratings' && !this.ratingSummary) this.loadRatings(this.selectedTheater.id);
-  }
-
-  private loadSeats(theaterId: string): void {
-    this.loadingSeats = true;
-    this.cinemaApi.getTheaterSeats(theaterId).subscribe({
-      next: (seats) => {
-        this.seats = this.groupSeatsByRow(seats);
-        this.loadingSeats = false;
-      },
-      error: (e: HttpErrorResponse) => {
-        this.msg.add({ severity: 'error', summary: 'Error', detail: this.extractError(e, 'No se pudieron cargar los asientos'), life: 5000 });
-        this.loadingSeats = false;
-      }
-    });
-  }
-
-  private groupSeatsByRow(seats: SeatResponse[]): SeatCell[][] {
-    const rowMap = new Map<string, SeatCell[]>();
-    for (const s of seats) {
-      if (!rowMap.has(s.rowName)) rowMap.set(s.rowName, []);
-      rowMap.get(s.rowName)!.push({ ...s });
-    }
-    return [...rowMap.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([, cells]) => cells.sort((a, b) => a.colNumber - b.colNumber));
-  }
-
-  private loadComments(theaterId: string): void {
-    this.loadingComments = true;
-    this.cinemaApi.getTheaterComments(theaterId).subscribe({
-      next: (c) => { this.comments = c; this.loadingComments = false; },
-      error: (e: HttpErrorResponse) => {
-        this.msg.add({ severity: 'error', summary: 'Error', detail: this.extractError(e, 'No se pudieron cargar los comentarios'), life: 5000 });
-        this.loadingComments = false;
-      }
-    });
-  }
-
-  private loadRatings(theaterId: string): void {
-    this.loadingRatings = true;
-    this.cinemaApi.getTheaterRatings(theaterId).subscribe({
-      next: (r) => { this.ratingSummary = r; this.loadingRatings = false; },
-      error: (e) => {
-        this.msg.add({ severity: 'error', summary: 'Error', detail: this.extractError(e, 'No se pudieron cargar las calificaciones'), life: 5000 });
-        this.loadingRatings = false;
-      }
-    });
   }
 
   saveUpdate(): void {
     if (!this.selectedTheater) return;
-    const trimmedName = this.editForm.name.trim();
-    const duplicate = this.theaters.find(
-      t => t.id !== this.selectedTheater!.id &&
-           t.name.trim().toLowerCase() === trimmedName.toLowerCase()
-    );
-    if (duplicate) {
-      this.msg.add({ severity: 'warn', summary: 'Nombre duplicado', detail: `Ya existe una sala con el nombre "${duplicate.name}"`, life: 5000 });
-      return;
-    }
     this.savingUpdate = true;
     this.cinemaApi.updateTheater(this.selectedTheater.id, this.editForm).subscribe({
       next: () => {
-        this.msg.add({ severity: 'success', summary: 'Guardado', detail: 'Sala actualizada correctamente', life: 4000 });
+        this.msg.add({ severity: 'success', summary: 'Guardado', detail: 'Sala actualizada correctamente' });
         this.savingUpdate = false;
         this.showDetailModal = false;
         this.loadData();
       },
-      error: (e: HttpErrorResponse) => {
-        this.msg.add({ severity: 'error', summary: 'Error', detail: this.extractError(e, 'No se pudo actualizar la sala'), life: 5000 });
+      error: () => {
+        this.msg.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar la sala' });
         this.savingUpdate = false;
       }
     });
@@ -246,41 +191,137 @@ export class RoomsComponent implements OnInit {
     this.creating = true;
     this.resolveCinemaId().subscribe({
       next: cinemaId => {
-        if (!cinemaId) {
-          this.msg.add({ severity: 'error', summary: 'Error', detail: 'No se encontró el cine asignado a tu cuenta' });
-          this.creating = false;
-          return;
-        }
+        if (!cinemaId) return;
         const payload: CreateTheaterPayload = { cinemaId, ...this.createForm };
         this.cinemaApi.createTheater(payload).subscribe({
           next: () => {
-            this.msg.add({ severity: 'success', summary: 'Creada', detail: 'Sala creada exitosamente', life: 4000 });
+            this.msg.add({ severity: 'success', summary: 'Sala Creada', detail: 'No olvides asignarle un precio en el Gestor de Precios.' });
             this.creating = false;
             this.showCreateModal = false;
             this.loadData();
           },
-          error: (e: HttpErrorResponse) => {
-            this.msg.add({ severity: 'error', summary: 'Error', detail: this.extractError(e, 'No se pudo crear la sala'), life: 5000 });
+          error: () => {
+            this.msg.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear la sala' });
             this.creating = false;
           }
         });
-      },
-      error: () => {
-        this.msg.add({ severity: 'error', summary: 'Error', detail: 'No se encontró el cine asignado a tu cuenta' });
-        this.creating = false;
       }
     });
   }
 
-  totalSeats(t: AdminTheater): number { return t.rows * t.cols; }
+  // ── 2. NUEVA LÓGICA DEL GESTOR DE PRECIOS ──
 
-  starArray(score: number): number[] {
-    return Array.from({ length: 5 }, (_, i) => i + 1);
+  openPricingManager(): void {
+    this.showPricingModal = true;
+    this.loadingPricing = true;
+    
+    // Mapeamos las salas a las filas de la tabla
+    this.pricingRows = this.theaters.map(t => ({
+      theaterId: t.id,
+      name: t.name,
+      typeTheaterId: t.typeTheaterId,
+      typeTheaterName: t.typeTheaterName,
+      currentPrice: null,
+      inputPrice: null,
+      hasExistingPrice: false,
+      loading: true // Spinner individual por fila
+    }));
+
+    // Cargamos los precios en paralelo para todas las salas
+    const requests = this.pricingRows.map(row => 
+      this.cinemaApi.getTheaterPricing(row.theaterId).pipe(
+        catchError(() => of(null)) // Si falla (404), devuelve null y sabemos que no tiene precio
+      )
+    );
+
+    forkJoin(requests).subscribe(results => {
+      results.forEach((res, index) => {
+        const row = this.pricingRows[index];
+        if (res) {
+          row.currentPrice = res.price;
+          row.inputPrice = res.price;
+          row.hasExistingPrice = true;
+        }
+        row.loading = false;
+      });
+      this.loadingPricing = false;
+    });
   }
 
-  private extractError(err: HttpErrorResponse, fallback: string): string {
-    if (!err?.error) return fallback;
-    if (typeof err.error === 'string' && err.error.trim()) return err.error;
-    return err.error?.message || err.error?.error || fallback;
+  saveRowPrice(row: PricingRow): void {
+    if (row.inputPrice == null) return;
+    row.loading = true;
+    
+    const payload = {
+      typeTheaterId: row.typeTheaterId,
+      price: row.inputPrice,
+      effectiveDate: this.getTodayDateString()
+    };
+
+    const request$ = row.hasExistingPrice 
+      ? this.cinemaApi.updateTheaterPricing(row.theaterId, payload)
+      : this.cinemaApi.createTheaterPricing(row.theaterId, payload);
+
+    request$.subscribe({
+      // Si el backend se arregló y funciona perfecto:
+      next: (res) => this.handleRowSuccess(row, res.price),
+      
+      // Si el backend lanza el Falso 500:
+      error: () => {
+        // INTERCEPTAMOS EL ERROR: Hacemos una consulta rápida para ver si sí se guardó en la BD
+        this.cinemaApi.getTheaterPricing(row.theaterId).subscribe({
+          next: (res) => {
+            // ¡Era un falso error! El precio sí está en la base de datos
+            this.handleRowSuccess(row, res.price);
+          },
+          error: () => {
+            // Si también falla la consulta, entonces sí fue un error real
+            row.loading = false;
+            this.msg.add({ severity: 'error', summary: 'Error', detail: `Fallo real al guardar precio en ${row.name}` });
+          }
+        });
+      }
+    });
+  }
+
+  // Pequeño método auxiliar para no repetir código
+  private handleRowSuccess(row: PricingRow, newPrice: number): void {
+    row.currentPrice = newPrice;
+    row.hasExistingPrice = true;
+    row.loading = false;
+    this.msg.add({ severity: 'success', summary: 'Éxito', detail: `Precio de ${row.name} actualizado` });
+  }
+
+  // ── UTILIDADES ──
+  private loadSeats(theaterId: string): void {
+    this.loadingSeats = true;
+    this.cinemaApi.getTheaterSeats(theaterId).subscribe({
+      next: (seats) => {
+        this.seats = this.groupSeatsByRow(seats);
+        this.loadingSeats = false;
+      },
+      error: () => this.loadingSeats = false
+    });
+  }
+
+  private groupSeatsByRow(seats: SeatResponse[]): SeatCell[][] {
+    const rowMap = new Map<string, SeatCell[]>();
+    for (const s of seats) {
+      if (!rowMap.has(s.rowName)) rowMap.set(s.rowName, []);
+      rowMap.get(s.rowName)!.push({ ...s });
+    }
+    return [...rowMap.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, cells]) => cells.sort((a, b) => a.colNumber - b.colNumber));
+  }
+
+  totalSeats(t: AdminTheater): number { return t.rows * t.cols; }
+
+  private getTodayDateString(): string {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   }
 }

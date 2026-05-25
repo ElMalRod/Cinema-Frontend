@@ -1,0 +1,108 @@
+<p-toast position="top-right" appendTo="body" />
+
+<div class="page-wrapper">
+  
+  <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+      <h1 class="page-title">Mi Cartera</h1>
+      <p class="page-subtitle">Gestiona el saldo y visualiza tus transacciones para la compra de anuncios.</p>
+    </div>
+    <p-button label="Recargar Saldo" icon="pi pi-wallet" size="large" (onClick)="openRechargeModal()" />
+  </div>
+
+  <!-- Tarjeta de Saldo Actual -->
+  <div class="balance-cards" style="margin-bottom: 2rem;">
+    <p-card styleClass="balance-card">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <div class="icon-circle" style="background: var(--p-primary-50); color: var(--p-primary-color); padding: 1.5rem; border-radius: 50%;">
+          <i class="pi pi-money-bill" style="font-size: 2.5rem;"></i>
+        </div>
+        <div>
+          <span style="color: #666; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">Saldo Disponible</span>
+          <h2 style="font-size: 3rem; margin: 0; color: var(--p-text-color);">Q {{ currentBalance | number:'1.2-2' }}</h2>
+        </div>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Tabla de Historial -->
+  <p-card header="Historial de Transacciones">
+    <p-table [value]="transactions" [loading]="loading" [paginator]="true" [rows]="10" responsiveLayout="scroll" styleClass="p-datatable-striped">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Fecha</th>
+          <th>Tipo</th>
+          <th>Descripción</th>
+          <th style="text-align: right;">Monto</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-tx>
+        <tr>
+          <td>{{ tx.transactionDate | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>
+            <p-tag [value]="getTxTypeLabel(tx.type)" [severity]="getTxTypeSeverity(tx.type)" />
+          </td>
+          <td>{{ tx.description || 'Sin descripción' }}</td>
+          <td style="text-align: right; font-weight: bold;" [ngStyle]="{'color': tx.type === 'RECHARGE' ? 'var(--p-green-500)' : 'var(--p-red-500)'}">
+            {{ tx.type === 'RECHARGE' ? '+' : '-' }} Q {{ tx.amount | number:'1.2-2' }}
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="4" style="text-align: center; padding: 2rem;">
+            No tienes transacciones en tu historial.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Modal de Recarga -->
+<p-dialog 
+  [(visible)]="showRechargeModal" 
+  [modal]="true" 
+  [draggable]="false" 
+  [resizable]="false" 
+  header="Recargar Cartera" 
+  [style]="{width: '450px'}"
+>
+  <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1rem;">
+    
+    <div class="form-field" style="display: flex; flex-direction: column; gap: 0.5rem;">
+      <label style="font-weight: bold;">Monto a recargar (Q) *</label>
+      <p-inputnumber 
+        [(ngModel)]="rechargeAmount" 
+        mode="currency" 
+        currency="GTQ" 
+        locale="es-GT" 
+        [min]="0.01" 
+        placeholder="Ej. 500.00"
+        class="p-inputtext-lg"
+      />
+    </div>
+
+    <div class="form-field" style="display: flex; flex-direction: column; gap: 0.5rem;">
+      <label style="font-weight: bold;">Descripción (Opcional)</label>
+      <input 
+        pInputText 
+        [(ngModel)]="rechargeDescription" 
+        placeholder="Ej. Recarga para campaña de verano" 
+        maxlength="255"
+      />
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" (onClick)="showRechargeModal = false" />
+    <p-button 
+      label="Confirmar Pago" 
+      icon="pi pi-check" 
+      [loading]="recharging" 
+      [disabled]="!rechargeAmount || rechargeAmount <= 0" 
+      (onClick)="submitRecharge()" 
+    />
+  </ng-template>
+</p-dialog>

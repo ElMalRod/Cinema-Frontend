@@ -1,0 +1,118 @@
+/* ==========================================================================
+   Contenedor Principal
+   ========================================================================== */
+.page-wrapper {
+  padding: 1.5rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* ==========================================================================
+   Cabecera (Header)
+   ========================================================================== */
+.page-header {
+  .page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--p-text-color, #1f2937);
+    margin: 0 0 0.5rem 0;
+  }
+
+  .page-subtitle {
+    font-size: 1rem;
+    color: var(--p-text-muted-color, #6b7280);
+    margin: 0;
+  }
+}
+
+/* ==========================================================================
+   Tarjeta de Saldo (Balance Card)
+   ========================================================================== */
+.balance-cards {
+  /* Hacemos que la tarjeta de PrimeNG tenga un relleno más espacioso */
+  ::ng-deep .balance-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    
+    .p-card-body {
+      padding: 2.5rem;
+    }
+  }
+
+  .icon-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+}
+
+/* ==========================================================================
+   Formularios (Modal de Recarga)
+   ========================================================================== */
+.form-field {
+  label {
+    font-size: 0.95rem;
+    color: var(--p-text-color, #374151);
+  }
+
+  ::ng-deep .p-inputnumber {
+    width: 100%;
+  }
+
+  ::ng-deep .p-inputtext {
+    width: 100%;
+  }
+
+  .p-inputtext-lg {
+    font-size: 1.25rem;
+    padding: 1rem;
+  }
+}
+
+/* ==========================================================================
+   Tabla de Historial
+   ========================================================================== */
+::ng-deep .p-datatable-striped {
+  .p-datatable-header {
+    background: transparent;
+    border: none;
+    padding: 1rem 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  .p-datatable-thead > tr > th {
+    background-color: #f9fafb;
+    color: #374151;
+    font-weight: 600;
+    padding: 1rem;
+  }
+
+  .p-datatable-tbody > tr > td {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+}
+
+/* ==========================================================================
+   Animaciones
+   ========================================================================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

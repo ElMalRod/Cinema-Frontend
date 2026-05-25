@@ -258,3 +258,28 @@ export interface AdBlockResponse {
   createdAt: string;
 }
 
+export interface TheaterPrincingRequest {
+  typeTheaterId: string;
+  price: number;
+  effectiveDate: string;
+}
+
+export type WalletTxType = 'RECHARGE' |  'PAYMENT' 
+
+export interface WalletTransactionResponse {
+  amount: number;
+  type: WalletTxType;
+  description: string;
+  transactionDate: string;
+}
+
+export interface CreateWalletTransactionRequest {
+  adminCinemaId: string;
+  amount: number;
+  description?: string;
+}
+
+export interface RechargeResponse {
+  newBalance: number;
+  transactionDate: string;
+}
