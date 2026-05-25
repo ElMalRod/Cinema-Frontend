@@ -165,3 +165,23 @@ export interface RatingSummary {
   ratings: RatingItem[];
   averageScore: number | null;
 }
+
+export interface UserMovieComment {
+  id: string;
+  content: string;
+  createdAt: string;
+  edited: boolean;
+  movieId: string;
+  movieTitle: string;
+  posterUrl: string | null;
+}
+
+export interface UserMovieRating {
+  id: string;
+  score: number;
+  createdAt: string;
+  edited: boolean;
+  movieId: string;
+  movieTitle: string;
+  posterUrl: string | null;
+}

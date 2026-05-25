@@ -18,7 +18,9 @@ import {
   PeopleOption,
   PosterItem,
   RatingSummary,
-  UpdateMoviePayload
+  UpdateMoviePayload,
+  UserMovieComment,
+  UserMovieRating
 } from '../models/movie.model';
 
 export const STATIC_COUNTRIES: CountryOption[] = [
@@ -272,5 +274,13 @@ export class MoviesApiService {
 
   updateRating(ratingId: string, score: number): Observable<RatingSummary> {
     return this.http.patch<RatingSummary>(`${this.base}/ratings/${ratingId}`, { score });
+  }
+
+  getMyMovieComments(): Observable<UserMovieComment[]> {
+    return this.http.get<UserMovieComment[]>(`${this.base}/comments/user`);
+  }
+
+  getMyMovieRatings(): Observable<UserMovieRating[]> {
+    return this.http.get<UserMovieRating[]>(`${this.base}/ratings/user`);
   }
 }

@@ -19,6 +19,8 @@ import {
   TheaterInfo,
   TheaterComment,
   TheaterRatingSummary,
+  UserTheaterComment,
+  UserTheaterRating,
   ShowtimeInfo,
   SeatResponse,
   TheaterPricingResponse,
@@ -136,6 +138,14 @@ export class CinemaApiService {
 
   updateTheaterRating(ratingId: string, userId: string, score: number): Observable<TheaterRatingSummary> {
     return this.http.patch<TheaterRatingSummary>(`${this.base}/ratings/${ratingId}`, { userId, score });
+  }
+
+  getUserTheaterComments(userId: string): Observable<UserTheaterComment[]> {
+    return this.http.get<UserTheaterComment[]>(`${this.base}/comments/user/${userId}`);
+  }
+
+  getUserTheaterRatings(userId: string): Observable<UserTheaterRating[]> {
+    return this.http.get<UserTheaterRating[]>(`${this.base}/ratings/user/${userId}`);
   }
 
   // ── Admin: Cinema info ─────────────────────────────────────────────────────
