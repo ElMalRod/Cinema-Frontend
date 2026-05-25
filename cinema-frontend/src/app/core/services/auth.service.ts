@@ -1,6 +1,6 @@
-﻿import { HttpClient } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, catchError, map, of, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, of, switchMap, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { User, UserRole } from '../models/user.model';
 
@@ -15,6 +15,14 @@ interface RegisterRequest {
   email: string;
   password: string;
   role: UserRole;
+}
+
+interface AdminCinemaResponse {
+  id: string;
+  countryId: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
 }
 
 interface ForgotPasswordRequest {
@@ -33,9 +41,10 @@ interface ChangePasswordRequest {
 
 interface BackendLoginResponse {
   token: string;
-  userId: string;
-  email: string;
-  role: UserRole;
+  type?: string;
+  userId?: string;
+  email?: string;
+  role?: UserRole;
 }
 
 export interface MeResponse {
@@ -57,12 +66,44 @@ export class AuthService {
 
   readonly currentUser$ = this.currentUserSubject.asObservable();
 
+  constructor() {
+    this.bootstrapSession();
+  }
+
   login(payload: LoginRequest): Observable<AuthResponse> {
     return this.http.post<BackendLoginResponse>(`${environment.apiBaseUrl}/auth/login`, payload).pipe(
-      map((response) => {
-        const user = this.mapUser(response);
-        return { token: response.token, user };
+      // 1. Guardamos el token inicial
+      tap((response) => localStorage.setItem('token', response.token)),
+      
+      // 2. Obtenemos los datos del usuario (rol, email, id)
+      switchMap((response) =>
+        this.getMe().pipe(
+          map((me) => ({ token: response.token, user: this.mapUserFromMe(me) })),
+          catchError(() => of({ token: response.token, user: this.mapUserFromLogin(response, payload.email) }))
+        )
+      ),
+
+      // 3. LA INTERCEPCIÓN DEL ADMIN
+      switchMap(({ token, user }) => {
+        // Si el que se esta logueando es un administrador de cine
+        if (user.role === 'CINEMA_ADMIN') {
+          // .llamamos al endpoint usando el ID del usuario
+          return this.fetchCinemaId(user.id).pipe(
+            map((cinemaId) => {
+              // Si el endpoint nos devolvio el ID del cine exitosamente, lo guardamos
+              if (cinemaId) {
+                localStorage.setItem('cinemaId', cinemaId);
+              }
+              // Continuamos con el flujo pasando el token y el user intactos
+              return { token, user };
+            })
+          );
+        }
+        // Si es un CLIENT o un SYSTEM_ADMIN, ignoramos esto y continuamos
+        return of({ token, user });
       }),
+
+      // 4. Finalizamos el login guardando la sesión principal
       tap(({ token, user }) => {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
@@ -108,19 +149,100 @@ export class AuthService {
   }
 
   getRole(): UserRole | null {
-    return this.currentUserSubject.value?.role ?? null;
+    return this.currentUserSubject.value?.role ?? this.getRoleFromToken();
   }
 
   isAuthenticated(): boolean {
     return !!this.getToken();
   }
 
-  private mapUser(response: BackendLoginResponse): User {
+  hasValidSession(): boolean {
+    return this.isAuthenticated();
+  }
+
+  getDashboardRoute(role: UserRole | null = this.getRole()): string {
+    switch (role) {
+      case 'CLIENT':
+        return '/dashboard/client/tickets';
+      case 'CINEMA_ADMIN':
+        return '/dashboard/cinema/rooms';
+      case 'ADVERTISER':
+        return '/dashboard/advertiser/ads';
+      case 'SYSTEM_ADMIN':
+        return '/dashboard/admin/users';
+      default:
+        return '/login';
+    }
+  }
+
+  private bootstrapSession(): void {
+    if (!this.isAuthenticated() || this.currentUserSubject.value) {
+      return;
+    }
+
+    this.getMe()
+      .pipe(
+        map((me) => this.mapUserFromMe(me)),
+        catchError(() => {
+          this.clearSession();
+          return of(null);
+        })
+      )
+      .subscribe((user) => {
+        if (!user) {
+          return;
+        }
+        localStorage.setItem('user', JSON.stringify(user));
+        this.currentUserSubject.next(user);
+      });
+  }
+
+  private getRoleFromToken(): UserRole | null {
+    const payload = this.decodeTokenPayload(this.getToken());
+    const role = payload?.['role'];
+
+    if (role === 'CLIENT' || role === 'CINEMA_ADMIN' || role === 'ADVERTISER' || role === 'SYSTEM_ADMIN') {
+      return role;
+    }
+
+    return null;
+  }
+
+  private decodeTokenPayload(token: string | null): Record<string, unknown> | null {
+    if (!token) {
+      return null;
+    }
+
+    const parts = token.split('.');
+    if (parts.length < 2) {
+      return null;
+    }
+
+    try {
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+      return JSON.parse(atob(padded)) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
+
+  private mapUserFromMe(response: MeResponse): User {
     return {
       id: response.userId,
-      name: this.resolveName(response.email),
       email: response.email,
-      role: response.role
+      role: response.role,
+      name: this.resolveName(response.email)
+    };
+  }
+
+  private mapUserFromLogin(response: BackendLoginResponse, fallbackEmail: string): User {
+    const email = response.email ?? fallbackEmail;
+    return {
+      id: response.userId ?? this.currentUserSubject.value?.id ?? '',
+      email,
+      role: response.role ?? this.currentUserSubject.value?.role ?? 'CLIENT',
+      name: this.resolveName(email)
     };
   }
 
@@ -145,6 +267,20 @@ export class AuthService {
   private clearSession(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('cinemaId');
     this.currentUserSubject.next(null);
   }
+
+  private fetchCinemaId(adminUserId: string): Observable<string | null> {
+    return this.http.get<AdminCinemaResponse>(`${environment.apiBaseUrl}/cinemas/v1/cinemas/admin/${adminUserId}`).pipe(
+      map((response) => response.id), 
+      // Si el usuario no tiene cine asignado o hay error, no rompemos la app, devolvemos null
+      catchError(() => of(null)) 
+    );
+  }
+
+  getCinemaId(): string | null {
+    return localStorage.getItem('cinemaId');
+  }
+  
 }

@@ -1,0 +1,111 @@
+<p-toast position="top-right" appendTo="body"></p-toast>
+
+<div class="checkout-page">
+  <div class="checkout-header">
+    <p-button icon="pi pi-arrow-left" label="Volver a Horarios" [text]="true" severity="secondary" (onClick)="goBack()"></p-button>    <h2>Selecciona tus asientos</h2>
+  </div>
+  <app-ad-banner [cinemaId]="checkoutData?.cinemaId"></app-ad-banner>
+
+  @if (loading) {
+    <div class="spinner-container flex justify-content-center py-6">
+      <p-progressSpinner strokeWidth="4"></p-progressSpinner>
+    </div>
+  } @else {
+    <div class="checkout-layout">
+    
+      <!-- LADO IZQUIERDO: Mapa de Asientos -->
+      <div class="seat-map-container">
+        
+        <div class="screen-indicator">
+          <div class="screen">PANTALLA</div>
+        </div>
+
+        <div class="seat-grid">
+          @for (row of seatRows; track row.rowName) {
+            <div class="seat-row">
+              <span class="row-label">{{ row.rowName }}</span>
+              <div class="seats-wrapper">
+                @for (seat of row.seats; track seat.id) {
+                  <button 
+                    class="seat-btn" 
+                    [ngClass]="seat.status"
+                    [disabled]="seat.status === 'occupied'"
+                    (click)="toggleSeat(seat)"
+                    pTooltip="Fila {{seat.rowName}} - Asiento {{seat.colNumber}}"
+                    tooltipPosition="top">
+                    {{ seat.colNumber }}
+                  </button>
+                }
+              </div>
+              <span class="row-label">{{ row.rowName }}</span>
+            </div>
+          }
+        </div>
+
+        <!-- Leyenda -->
+        <div class="seat-legend">
+          <div class="legend-item"><div class="seat-btn available"></div> Disponible</div>
+          <div class="legend-item"><div class="seat-btn selected"></div> Seleccionado</div>
+          <div class="legend-item"><div class="seat-btn occupied"></div> Ocupado</div>
+        </div>
+      </div>
+
+      <!-- LADO DERECHO: Resumen de Compra -->
+      <div class="summary-container">
+        <div class="summary-card">
+          <h3>Resumen de Compra</h3>
+          <div class="movie-info">
+            <span class="font-bold text-xl block mb-1">{{ checkoutData?.movieTitle }}</span>
+            <span class="block text-gray-600"><i class="pi pi-calendar mr-1"></i> {{ checkoutData?.showtimeDate }} | {{ checkoutData?.showtimeStart }}</span>
+            <span class="block text-gray-600"><i class="pi pi-video mr-1"></i> {{ checkoutData?.companyName }} - {{ checkoutData?.theaterName }} ({{ checkoutData?.version }})</span>
+          </div>
+
+          <p-divider></p-divider>
+
+          <div class="seats-info mb-3">
+            <span class="block mb-2 font-medium">Asientos seleccionados: {{ selectedSeats.length }}</span>
+            <div class="flex flex-wrap gap-1">
+              @for (s of selectedSeats; track s.id) {
+                <span class="seat-badge">{{s.rowName}}-{{s.colNumber}}</span>
+              }
+            </div>
+          </div>
+
+          <div class="flex justify-content-between mb-2">
+            <span>Precio Unitario:</span>
+            <span>Q {{ pricing?.price | number:'1.2-2' }}</span>
+          </div>
+          
+          <p-divider></p-divider>
+
+          <div class="flex justify-content-between font-bold text-xl mb-3">
+            <span>TOTAL:</span>
+            <span>Q {{ totalAmount | number:'1.2-2' }}</span>
+          </div>
+
+          <!-- Validación de Wallet -->
+          <div class="wallet-box" [ngClass]="{'insufficient': !hasEnoughBalance && selectedSeats.length > 0}">
+            <div class="flex justify-content-between mb-1">
+              <span><i class="pi pi-wallet mr-1"></i> Mi Wallet:</span>
+              <span class="font-bold">Q {{ walletBalance | number:'1.2-2' }}</span>
+            </div>
+            @if (!hasEnoughBalance && selectedSeats.length > 0) {
+              <small class="text-red-500 font-medium"><i class="pi pi-exclamation-triangle mr-1"></i>Saldo insuficiente</small>
+            }
+          </div>
+
+          <p-button 
+            label="Confirmar Compra" 
+            icon="pi pi-check" 
+            styleClass="w-full mt-4" 
+            size="large"
+            severity="success"
+            [disabled]="selectedSeats.length === 0 || !hasEnoughBalance"
+            [loading]="processing"
+            (onClick)="confirmPurchase()">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,13 +1,206 @@
-﻿<div class="page-wrapper">
-  <p-card styleClass="page-card">
-    <ng-template pTemplate="header">
-      <div class="page-header">
-        <h1 class="page-title">{{ title }}</h1>
-        <p class="page-subtitle">{{ subtitle }}</p>
+﻿<p-toast></p-toast>
+<p-confirmDialog appendTo="body"></p-confirmDialog>
+
+<div class="ads-container">
+  <app-shared-card title="Mis Campañas Publicitarias" footer="Gestiona los anuncios mostrados en el sistema">
+    
+    <div class="columns is-vcentered mb-4">
+      <div class="column">
+        <p class="subtitle is-6 has-text-grey">Crea nuevos anuncios y monitorea su estado activo.</p>
       </div>
-    </ng-template>
-    <div class="page-content">
-      <p-progressSpinner *ngIf="false"/>
+      <div class="column is-narrow">
+        <button pButton type="button" label="Comprar Anuncio" icon="pi pi-megaphone" class="app-btn-accent" (click)="openNew()"></button>
+      </div>
     </div>
-  </p-card>
+
+    <p-table [value]="ads" [loading]="loading" [rowHover]="true" styleClass="p-datatable-striped" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Contenido</th>
+          <th>Tipo y Duración</th>
+          <th>Vigencia</th>
+          <th>Estado</th>
+          <th class="has-text-centered">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-ad>
+        <tr>
+          <td style="max-width: 250px;">
+            <div class="text-truncate has-text-weight-medium" [title]="ad.contentText">{{ ad.contentText }}</div>
+            <div class="mt-2 flex gap-2">
+              <p-tag *ngIf="ad.imageUrl" severity="info" value="Imagen" icon="pi pi-image"></p-tag>
+              <p-tag *ngIf="ad.videoUrl" severity="warning" value="Video" icon="pi pi-video"></p-tag>
+            </div>
+          </td>
+          <td>
+            <span class="has-text-weight-bold">{{ translateType(ad.adType) }}</span><br>
+            <span class="has-text-primary is-size-7">Q{{ ad.amountPaid }}</span>
+          </td>
+          <td>
+            <small class="is-block"><i class="pi pi-calendar-plus mr-1"></i> {{ ad.startDate | date:'dd/MM/yy' }}</small>
+            <small class="is-block has-text-grey"><i class="pi pi-calendar-minus mr-1"></i> {{ ad.endDate | date:'dd/MM/yy' }}</small>
+          </td>
+          <td>
+            <p-tag [severity]="ad.active ? 'success' : 'danger'" [value]="ad.active ? 'Activo' : 'Inactivo'"></p-tag>
+          </td>
+          <td class="has-text-centered">
+            <button pButton pRipple icon="pi pi-eye" class="p-button-rounded p-button-info p-button-text mr-1" 
+                    pTooltip="Ver Detalles" tooltipPosition="top" (click)="viewAdDetails(ad)"></button>
+            
+            <button pButton pRipple icon="pi pi-power-off" class="p-button-rounded p-button-danger p-button-text" 
+                    pTooltip="Desactivar" tooltipPosition="top" [disabled]="!ad.active" (click)="confirmDesactivate(ad)"></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="5" class="has-text-centered p-5 has-text-grey"><i class="pi pi-inbox mb-2 is-size-2"></i><br>Aún no has comprado ningún anuncio.</td></tr>
+      </ng-template>
+    </p-table>
+  </app-shared-card>
 </div>
+<p-dialog [(visible)]="displayModal" appendTo="body" [style]="{width: '800px', 'max-height': '90vh'}" header="Lanzar Nueva Campaña" [modal]="true" class="custom-modal builder-modal">
+  <ng-template pTemplate="content">
+    <form [formGroup]="adForm" class="mt-2">
+      
+      <div class="columns is-variable is-5 builder-columns">
+        
+        <div class="column is-6 config-panel">
+          <div class="field mb-5">
+            <label class="label has-text-primary"><i class="pi pi-box mr-2"></i>1. Paquete Publicitario</label>
+            <p-dropdown [options]="priceOptions" formControlName="adPriceId" placeholder="Selecciona un paquete" appendTo="body" styleClass="w-full"></p-dropdown>
+          </div>
+
+          <div class="field mb-0">
+            <label class="label has-text-primary"><i class="pi pi-pencil mr-2"></i>2. Texto del Anuncio</label>
+            <textarea pTextarea formControlName="contentText" rows="5" placeholder="Ej. ¡Aprovecha la promoción en boletos 2x1 este fin de semana!" maxlength="500" class="w-full custom-textarea"></textarea>
+            <div class="is-flex is-justify-content-space-between mt-1">
+              <small class="has-text-danger" *ngIf="adForm.get('contentText')?.touched && adForm.get('contentText')?.invalid">El texto es obligatorio.</small>
+              <small class="has-text-grey ml-auto">{{ adForm.get('contentText')?.value?.length || 0 }} / 500</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="column is-6 media-panel">
+          
+          <div *ngIf="!selectedPriceType" class="empty-state-panel flex flex-column align-items-center justify-content-center h-full text-center p-4">
+            <div class="icon-circle mb-3">
+              <i class="pi pi-image is-size-2 has-text-grey-light"></i>
+            </div>
+            <h3 class="is-size-6 has-text-weight-bold has-text-grey mb-2">Recursos Multimedia</h3>
+            <p class="is-size-7 has-text-grey">Selecciona un paquete publicitario a la izquierda para ver las opciones de imagen o video disponibles.</p>
+          </div>
+
+          <div *ngIf="selectedPriceType" class="h-full flex flex-column">
+            <label class="label has-text-primary"><i class="pi pi-desktop mr-2"></i>3. Contenido Multimedia</label>
+
+            <ng-container *ngIf="selectedPriceType === AdType.TEXT_IMAGE">
+              <div class="box-upload text-center flex-grow-1 is-flex is-flex-direction-column is-justify-content-center">
+                <input type="file" #imageInput (change)="onImageSelect($event)" accept="image/png, image/jpeg" class="is-hidden">
+                
+                <div *ngIf="!imagePreviewUrl">
+                  <i class="pi pi-cloud-upload is-size-1 has-text-primary mb-3"></i>
+                  <p class="mb-3 has-text-grey is-size-7">Sube una imagen atractiva para tu anuncio. <br>Formatos soportados: JPG, PNG.</p>
+                  <button pButton type="button" icon="pi pi-upload" label="Explorar Archivos" class="p-button-outlined p-button-primary" (click)="imageInput.click()"></button>
+                </div>
+
+                <div class="media-preview-container" *ngIf="imagePreviewUrl">
+                  <img [src]="imagePreviewUrl" alt="Vista previa" class="media-preview">
+                  <button pButton type="button" icon="pi pi-times" class="p-button-rounded p-button-danger p-button-text btn-remove-media" (click)="clearMediaSelections()"></button>
+                </div>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="selectedPriceType === AdType.VIDEO_TEXT">
+              <div class="box-upload flex-grow-1 is-flex is-flex-direction-column">
+                <div class="flex justify-content-center gap-4 mb-4">
+                  <div class="flex align-items-center">
+                    <input type="radio" id="link" formControlName="videoUploadType" value="link" class="mr-2 custom-radio">
+                    <label for="link" class="is-size-7">Enlace YouTube</label>
+                  </div>
+                  <div class="flex align-items-center">
+                    <input type="radio" id="file" formControlName="videoUploadType" value="file" class="mr-2 custom-radio">
+                    <label for="file" class="is-size-7">Subir Archivo</label>
+                  </div>
+                </div>
+
+                <div *ngIf="adForm.get('videoUploadType')?.value === 'link'" class="mt-2 text-center">
+                  <input pInputText formControlName="videoUrl" placeholder="Ej: https://youtube.com/watch?v=..." class="w-full mb-3">
+                  <div class="media-preview-container mt-2" *ngIf="adForm.get('videoUrl')?.value">
+                    <div class="youtube-placeholder w-full"><i class="pi pi-youtube is-size-1 has-text-danger mb-2"></i><p class="has-text-weight-bold">Video Vinculado</p></div>
+                  </div>
+                </div>
+
+                <div *ngIf="adForm.get('videoUploadType')?.value === 'file'" class="text-center mt-2">
+                  <input type="file" #videoInput (change)="onVideoSelect($event)" accept="video/mp4" class="is-hidden">
+                  
+                  <div *ngIf="!videoPreviewUrl">
+                    <i class="pi pi-video is-size-1 has-text-primary mb-3"></i>
+                    <p class="mb-3 has-text-grey is-size-7">Sube tu anuncio en formato MP4.</p>
+                    <button pButton type="button" icon="pi pi-upload" label="Elegir Archivo" class="p-button-outlined" (click)="videoInput.click()"></button>
+                  </div>
+                  
+                  <div class="media-preview-container" *ngIf="videoPreviewUrl">
+                    <video [src]="videoPreviewUrl" controls class="media-preview w-full"></video>
+                    <button pButton type="button" icon="pi pi-times" class="p-button-rounded p-button-danger p-button-text btn-remove-media" (click)="clearMediaSelections()"></button>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="selectedPriceType === AdType.TEXT">
+              <div class="box-upload has-text-centered flex-grow-1 is-flex is-flex-direction-column align-items-center justify-content-center">
+                <div class="icon-circle mb-3">
+                  <i class="pi pi-align-left is-size-2 has-text-primary"></i>
+                </div>
+                <h3 class="has-text-weight-bold has-text-primary mb-1">Paquete de Solo Texto</h3>
+                <p class="has-text-grey is-size-7">Este paquete se mostrará usando exclusivamente el mensaje que redactaste a la izquierda.</p>
+              </div>
+            </ng-container>
+
+          </div>
+
+        </div>
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="border-top-1 border-300 pt-3 flex justify-content-end gap-2">
+      <button pButton label="Cancelar" icon="pi pi-times" class="p-button-text p-button-secondary" (click)="hideModal()"></button>
+      <button pButton label="Pagar y Publicar" icon="pi pi-check" class="app-btn-primary px-4" [disabled]="adForm.invalid || isSubmitting" (click)="saveAd()"></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog *ngIf="selectedAdDetails" [(visible)]="displayDetailModal" appendTo="body" [style]="{width: '500px'}" header="Vista Previa de Campaña" [modal]="true" class="custom-modal">
+  
+  <div class="preview-card mt-2">
+    <div class="media-showcase" *ngIf="selectedAdDetails.imageUrl || selectedAdDetails.videoUrl">
+      <img *ngIf="selectedAdDetails.imageUrl" [src]="selectedAdDetails.imageUrl" alt="Ad Image" class="showcase-img">
+      
+      <video *ngIf="selectedAdDetails.videoUrl && !selectedAdDetails.videoUrl.includes('youtube')" [src]="selectedAdDetails.videoUrl" controls class="showcase-video"></video>
+      
+      <div *ngIf="selectedAdDetails.videoUrl && selectedAdDetails.videoUrl.includes('youtube')" class="youtube-placeholder rounded">
+        <i class="pi pi-youtube is-size-1 has-text-danger mb-2"></i>
+        <a [href]="selectedAdDetails.videoUrl" target="_blank" class="has-text-primary has-text-weight-bold">Ver en YouTube <i class="pi pi-external-link is-size-7"></i></a>
+      </div>
+    </div>
+
+    <div class="p-4 has-background-white shadow-2" style="border-radius: 0 0 8px 8px;">
+      <p class="is-size-5 has-text-dark has-text-weight-medium" style="line-height: 1.4;">"{{ selectedAdDetails.contentText }}"</p>
+      
+      <p-divider></p-divider>
+      
+      <div class="flex justify-content-between align-items-center">
+        <div>
+          <small class="has-text-grey is-block">Tipo de Campaña</small>
+          <span class="has-text-weight-bold has-text-primary">{{ translateType(selectedAdDetails.adType) }}</span>
+        </div>
+        <div class="has-text-right">
+          <p-tag [severity]="selectedAdDetails.active ? 'success' : 'danger'" [value]="selectedAdDetails.active ? 'Activo' : 'Inactivo'"></p-tag>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</p-dialog>

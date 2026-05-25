@@ -1,13 +1,205 @@
-﻿<div class="page-wrapper">
-  <p-card styleClass="page-card">
-    <ng-template pTemplate="header">
-      <div class="page-header">
-        <h1 class="page-title">{{ title }}</h1>
-        <p class="page-subtitle">{{ subtitle }}</p>
+﻿<section class="wallet-page">
+  <div class="wallet-shell">
+    <header class="wallet-header">
+      <div>
+        <p class="header-kicker">Área de cliente</p>
+        <h1>{{ title }}</h1>
+        <p>{{ subtitle }}</p>
       </div>
-    </ng-template>
-    <div class="page-content">
-      <p-progressSpinner *ngIf="false"/>
-    </div>
-  </p-card>
-</div>
+      <span class="wallet-header-icon" aria-hidden="true">
+        <i class="pi pi-wallet"></i>
+      </span>
+    </header>
+
+    @if (loading) {
+      <article class="wallet-loading-card" aria-live="polite">
+        <div class="loading-title-row">
+          <span class="loading-icon">
+            <i class="pi pi-sync"></i>
+          </span>
+          <div>
+            <h2>Actualizando tu wallet</h2>
+            <p>Estamos preparando tu saldo y tus movimientos más recientes.</p>
+          </div>
+        </div>
+
+        <div class="loading-metrics">
+          <div class="metric-skeleton shimmer"></div>
+          <div class="metric-skeleton shimmer"></div>
+          <div class="metric-skeleton shimmer"></div>
+        </div>
+
+        <div class="loading-table">
+          <div class="table-row shimmer"></div>
+          <div class="table-row shimmer"></div>
+          <div class="table-row shimmer"></div>
+          <div class="table-row shimmer"></div>
+        </div>
+      </article>
+    } @else {
+      <div class="wallet-content-grid">
+        <article class="balance-card">
+          <p>Saldo disponible</p>
+          <strong>{{ formatAmount(balance) }}</strong>
+          <span>{{ transactions.length }} movimientos registrados</span>
+        </article>
+
+        <article class="recharge-card">
+          <h2>Recargar saldo</h2>
+          <p>Ingresa los datos para simular una recarga con tarjeta.</p>
+
+          <div class="payment-methods" aria-label="Métodos aceptados">
+            <span class="payment-pill">
+              <i class="pi pi-credit-card" aria-hidden="true"></i>
+              Tarjeta de crédito
+            </span>
+            <span class="payment-pill">
+              <i class="pi pi-credit-card" aria-hidden="true"></i>
+              Tarjeta de débito
+            </span>
+          </div>
+
+          <div class="card-form-shell">
+            <form class="card-form" [formGroup]="rechargeForm" (ngSubmit)="recharge()">
+              <div class="field-wrapper">
+                <label for="cardType">Tipo de tarjeta</label>
+                <p-select
+                  inputId="cardType"
+                  formControlName="cardType"
+                  [options]="cardTypeOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  appendTo="body"></p-select>
+                @if (isControlInvalid('cardType')) {
+                  <small class="error-text">Selecciona un tipo de tarjeta.</small>
+                }
+              </div>
+
+              <div class="field-wrapper">
+                <label for="amount">Monto a recargar</label>
+                <input pInputText id="amount" type="number" min="1" step="0.01" formControlName="amount" placeholder="0.00" />
+                @if (isControlInvalid('amount')) {
+                  <small class="error-text">Ingresa un monto válido mayor que 0.</small>
+                }
+              </div>
+
+              <div class="field-wrapper field-full">
+                <label for="cardHolder">Titular</label>
+                <input
+                  pInputText
+                  id="cardHolder"
+                  type="text"
+                  formControlName="cardHolder"
+                  placeholder="Nombre como aparece en la tarjeta"
+                  autocomplete="cc-name" />
+                @if (isControlInvalid('cardHolder')) {
+                  <small class="error-text">Ingresa el nombre del titular.</small>
+                }
+              </div>
+
+              <div class="field-wrapper field-full">
+                <label for="cardNumber">Número de tarjeta</label>
+                <input
+                  pInputText
+                  id="cardNumber"
+                  type="text"
+                  formControlName="cardNumber"
+                  placeholder="0000 0000 0000 0000"
+                  inputmode="numeric"
+                  autocomplete="cc-number"
+                  maxlength="23"
+                  (input)="onCardNumberInput($event)" />
+                @if (isControlInvalid('cardNumber')) {
+                  <small class="error-text">Usa entre 13 y 19 dígitos.</small>
+                }
+              </div>
+
+              <div class="field-wrapper">
+                <label for="cardExpiry">Vencimiento</label>
+                <input
+                  pInputText
+                  id="cardExpiry"
+                  type="text"
+                  formControlName="cardExpiry"
+                  placeholder="MM/AA"
+                  inputmode="numeric"
+                  autocomplete="cc-exp"
+                  maxlength="5"
+                  (input)="onCardExpiryInput($event)" />
+                @if (isControlInvalid('cardExpiry')) {
+                  <small class="error-text">Ingresa una fecha válida MM/AA.</small>
+                }
+              </div>
+
+              <div class="field-wrapper">
+                <label for="cardCvv">CVV</label>
+                <input
+                  pInputText
+                  id="cardCvv"
+                  type="text"
+                  formControlName="cardCvv"
+                  placeholder="123"
+                  inputmode="numeric"
+                  autocomplete="cc-csc"
+                  maxlength="4"
+                  (input)="onCardCvvInput($event)" />
+                @if (isControlInvalid('cardCvv')) {
+                  <small class="error-text">El CVV debe tener 3 o 4 dígitos.</small>
+                }
+              </div>
+
+              <div class="submit-row">
+                <button pButton type="submit" label="Aplicar recarga" [loading]="recharging"></button>
+              </div>
+            </form>
+          </div>
+
+          @if (errorMessage) {
+            <p class="message error">{{ errorMessage }}</p>
+          }
+          @if (successMessage) {
+            <p class="message success">{{ successMessage }}</p>
+          }
+        </article>
+      </div>
+
+      <article class="movements-card">
+        <h2>Últimos movimientos</h2>
+        <div class="table-wrapper">
+          <table class="wallet-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (tx of transactions; track tx.transactionDate + tx.type + tx.amount) {
+                <tr>
+                  <td>{{ tx.transactionDate | date: 'short' }}</td>
+                  <td>
+                    <span class="tx-badge" [ngClass]="transactionTypeClass(tx.type)">
+                      {{ transactionTypeLabel(tx.type) }}
+                    </span>
+                  </td>
+                  <td>{{ tx.description || 'Sin descripción' }}</td>
+                  <td>
+                    <strong [ngClass]="amountClass(tx.type)">{{ formatAmount(tx.amount) }}</strong>
+                  </td>
+                </tr>
+              }
+              @if (transactions.length === 0) {
+                <tr>
+                  <td colspan="4" class="empty-row">Aún no tienes movimientos en tu wallet.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+    }
+  </div>
+</section>
+

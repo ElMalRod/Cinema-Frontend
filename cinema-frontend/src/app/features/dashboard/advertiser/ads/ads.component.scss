@@ -1,26 +1,214 @@
-﻿.page-wrapper {
-  min-height: 100vh;
-  background: var(--color-bg);
-  padding: 2rem;
+﻿.ads-container { animation: fadeIn 0.3s ease-in-out; }
+
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Diseño de la caja de carga */
+.box-upload {
+  border: 2px dashed var(--color-secondary);
+  border-radius: 8px;
+  background-color: rgba(84, 119, 146, 0.05); /* Tono muy suave del secondary */
+  transition: all 0.2s ease;
+  height: 100%;
+  
+  &:hover {
+    border-color: var(--color-primary);
+    background-color: rgba(26, 50, 99, 0.03);
+  }
+}
+
+/* Contenedores de previsualización en el Formulario */
+.media-preview-container {
+  width: 100%;
+  max-height: 200px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+}
+
+.media-preview {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain; /* Evita que las imágenes se estiren feo */
+  border-radius: 6px;
+}
+
+.youtube-placeholder {
+  width: 100%;
+  height: 150px;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  justify-content: center;
+  align-items: center;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
 }
-.page-card {
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(26, 50, 99, 0.08);
+
+/* Estilos para el Modal de Preview (El que se abre al dar clic en Ver Detalles) */
+.preview-card {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  background-color: #f8f9fa;
 }
-.page-header {
-  padding: 1.5rem 2rem 0;
+
+.media-showcase {
+  width: 100%;
+  max-height: 300px;
+  background-color: #000; /* Fondo negro hace resaltar las imágenes/videos de cine */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-.page-title {
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  margin: 0;
+
+.showcase-img, .showcase-video {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
 }
-.page-subtitle {
-  color: var(--color-text-muted, var(--color-secondary));
-  margin-top: 0.25rem;
-  font-size: 0.95rem;
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ajustes globales de PrimeNG para suavizar bordes */
+::ng-deep {
+  .custom-modal .p-dialog-header {
+    border-bottom: 1px solid #e9ecef;
+    background-color: #ffffff;
+  }
+  .custom-modal .p-dialog-content {
+    padding-top: 1.5rem;
+    background-color: #ffffff;
+  }
+}
+
+/* ==========================================
+   ESTILOS DEL MODAL "AD BUILDER"
+   ========================================== */
+.builder-modal {
+  .p-dialog-content {
+    padding: 1.5rem 2rem !important;
+  }
+}
+
+.builder-columns {
+  position: relative;
+  
+  /* Línea divisoria en medio de las dos columnas */
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 5%;
+    height: 90%;
+    width: 1px;
+    background-color: #e2e8f0;
+    display: block;
+    
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+}
+
+.config-panel {
+  padding-right: 2rem !important;
+}
+
+.media-panel {
+  padding-left: 2rem !important;
+}
+
+.custom-textarea {
+  resize: none;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  padding: 0.75rem;
+  font-family: inherit;
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem rgba(26, 50, 99, 0.1);
+  }
+}
+
+/* Estado Vacío y Cajas de Carga */
+.empty-state-panel {
+  background-color: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  border-radius: 8px;
+}
+
+.icon-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.box-upload {
+  border: 2px dashed var(--color-secondary);
+  border-radius: 8px;
+  background-color: #f8fafc;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+  min-height: 250px;
+  
+  &:hover {
+    border-color: var(--color-primary);
+    background-color: #f1f5f9;
+  }
+}
+
+/* Contenedor de previsualización de imágenes/videos */
+.media-preview-container {
+  position: relative;
+  width: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #0f172a; /* Fondo oscuro para resaltar la imagen */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+}
+
+.media-preview {
+  max-width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+}
+
+.btn-remove-media {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #ef4444 !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  
+  &:hover {
+    background-color: #fee2e2 !important;
+  }
+}
+
+.youtube-placeholder {
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #f8fafc;
 }

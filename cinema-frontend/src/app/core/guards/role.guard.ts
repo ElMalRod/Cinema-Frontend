@@ -1,4 +1,4 @@
-﻿import { Injectable, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, Router, UrlTree } from '@angular/router';
 import { UserRole } from '../models/user.model';
 import { AuthService } from '../services/auth.service';
@@ -16,7 +16,11 @@ export class RoleGuard implements CanActivate {
       return true;
     }
 
-    if (role && allowedRoles.includes(role)) {
+    if (!role) {
+      return this.router.parseUrl('/login');
+    }
+
+    if (allowedRoles.includes(role)) {
       return true;
     }
 

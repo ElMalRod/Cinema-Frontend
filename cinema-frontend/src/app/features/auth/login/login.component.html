@@ -1,15 +1,50 @@
-<section class="login-shell surface-card">
-  <aside class="login-brand-panel">
-    <img class="login-logo" src="/logo-cinema.svg" alt="Cinema logo" />
-    <h1>Cinema Frontend</h1>
-    <p>Gestión moderna de cartelera, sedes, tickets y reportes.</p>
-  </aside>
+﻿<section class="login-page">
+  <div class="bg-orb bg-orb-one" aria-hidden="true"></div>
+  <div class="bg-orb bg-orb-two" aria-hidden="true"></div>
 
-  <div class="login-form-panel">
-    <app-shared-card title="Iniciar sesión" footer="Acceso seguro al sistema">
-      <app-shared-form [fields]="fields" submitLabel="Entrar" [loading]="loading" (onSubmit)="onSubmit($event)"></app-shared-form>
-      <p class="login-note">No tienes cuenta? <a routerLink="/register">Regístrate</a></p>
-      <p class="login-note"><a routerLink="/forgot-password">¿Olvidaste tu contraseña?</a></p>
-    </app-shared-card>
+  <div class="login-shell">
+    <aside class="login-brand-panel">
+      <img class="login-logo" src="/logo-cinema.svg" alt="Logo de Cinema" />
+      <p class="brand-kicker">Plataforma integral</p>
+      <h1>Todo tu cine en un solo lugar</h1>
+      <p class="brand-copy">Administra funciones, boletos, anuncios y reportes con una experiencia simple y rápida.</p>
+
+      <ul class="brand-benefits">
+        <li>
+          <i class="pi pi-check-circle" aria-hidden="true"></i>
+          Acceso seguro por rol de usuario
+        </li>
+        <li>
+          <i class="pi pi-chart-line" aria-hidden="true"></i>
+          Control en tiempo real de tu operación
+        </li>
+        <li>
+          <i class="pi pi-wallet" aria-hidden="true"></i>
+          Gestión centralizada de pagos y saldos
+        </li>
+      </ul>
+    </aside>
+
+    <div class="login-form-panel">
+      <div class="form-heading">
+        <p class="heading-kicker">Bienvenido</p>
+        <h2>Inicia sesión</h2>
+        <p>Ingresa con tu cuenta para continuar.</p>
+      </div>
+
+      <div class="form-card">
+        <app-shared-form [fields]="fields" submitLabel="Entrar ahora" [loading]="loading" (onSubmit)="onSubmit($event)"></app-shared-form>
+
+        @if (errorMessage) {
+          <p class="error-message">{{ errorMessage }}</p>
+        }
+
+        <div class="login-links">
+          <p>¿No tienes cuenta? <a routerLink="/register">Regístrate</a></p>
+          <p><a routerLink="/forgot-password">¿Olvidaste tu contraseña?</a></p>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
+

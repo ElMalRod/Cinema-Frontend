@@ -1,13 +1,391 @@
-﻿<div class="page-wrapper">
-  <p-card styleClass="page-card">
-    <ng-template pTemplate="header">
-      <div class="page-header">
-        <h1 class="page-title">{{ title }}</h1>
-        <p class="page-subtitle">{{ subtitle }}</p>
-      </div>
-    </ng-template>
-    <div class="page-content">
-      <p-progressSpinner *ngIf="false"/>
+﻿<p-toast position="top-right" appendTo="body" />
+
+<div class="movies-page">
+
+  <!-- ── Filtros ─────────────────────────────────────────────── -->
+  <div class="filters-bar">
+    <input
+      pInputText
+      class="filter-input"
+      placeholder="Buscar por título..."
+      [(ngModel)]="filterTitle"
+      (keyup.enter)="applyFilters()"
+    />
+
+    <p-select
+      class="filter-select"
+      [options]="categories"
+      optionLabel="name"
+      optionValue="id"
+      placeholder="Categoría"
+      [showClear]="true"
+      [(ngModel)]="filterCategoryId"
+      (onChange)="applyFilters()"
+    />
+
+    <p-select
+      class="filter-select"
+      [options]="classificationOptions"
+      optionLabel="name"
+      optionValue="id"
+      placeholder="Clasificación"
+      [showClear]="true"
+      [(ngModel)]="filterClassificationId"
+      (onChange)="applyFilters()"
+    />
+
+    <p-button label="Buscar" icon="pi pi-search" (onClick)="applyFilters()" />
+
+    @if (hasActiveFilters) {
+      <p-button
+        label="Limpiar"
+        icon="pi pi-times"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="clearFilters()"
+      />
+    }
+  </div>
+  <app-ad-banner></app-ad-banner>
+
+  <!-- ── Spinner ──────────────────────────────────────────────── -->
+  @if (loading) {
+    <div class="spinner-container">
+      <p-progressSpinner strokeWidth="4" />
     </div>
-  </p-card>
+  } @else if (movies.length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-film" style="font-size:3rem"></i>
+      <p>No se encontraron películas.</p>
+    </div>
+  } @else {
+
+    <!-- ── Grid de películas ─────────────────────────────────── -->
+    <div class="movies-grid">
+      @for (movie of movies; track movie.id) {
+        <div class="movie-card">
+          <div class="movie-poster">
+            @if (movie.poster) {
+              <img [src]="movie.poster" [alt]="movie.title" loading="lazy" />
+            } @else {
+              <div class="poster-placeholder"><i class="pi pi-image"></i></div>
+            }
+            @if (movie.classifications.length > 0) {
+              <span class="classification-badge">{{ movie.classifications[0].name }}</span>
+            }
+          </div>
+          <div class="movie-card-body">
+            <h3 class="movie-title">{{ movie.title }}</h3>
+            <div class="movie-meta">
+              <span><i class="pi pi-clock"></i> {{ formatDuration(movie.duration) }}</span>
+              <span><i class="pi pi-calendar"></i> {{ movie.releaseDate | date:'yyyy' }}</span>
+            </div>
+            <p-button
+              label="Ver más"
+              icon="pi pi-info-circle"
+              [outlined]="true"
+              size="small"
+              styleClass="w-full"
+              (onClick)="openDetail(movie)"
+            />
+          </div>
+        </div>
+      }
+    </div>
+  }
+
 </div>
+
+<!-- ── Modal detalle ─────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="showMovieModal"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="movie-detail-dialog"
+  [style]="{ width: '92vw', 'max-width': '1100px' }"
+  (onHide)="closeModal()"
+>
+  @if (loadingModal) {
+    <div class="modal-spinner"><p-progressSpinner strokeWidth="4" /></div>
+  } @else if (selectedMovie) {
+
+    <!-- ── 2 columnas: info + (poster + ratings) ──────────────── -->
+    <div class="detail-layout">
+
+      <!-- columna izquierda: información -->
+      <div class="detail-info">
+
+        <!-- título -->
+        <h2 class="detail-title">{{ selectedMovie.title }}</h2>
+
+        <!-- clasificaciones -->
+        @if (selectedMovie.classifications.length > 0) {
+          <div class="detail-tags">
+            @for (cl of selectedMovie.classifications; track cl.name) {
+              <p-tag [value]="cl.name + ' (' + cl.country + ')'" severity="warn" />
+            }
+          </div>
+        }
+
+        <!-- categorías -->
+        @if (selectedMovie.categories.length > 0) {
+          <div class="detail-categories">
+            @for (cat of selectedMovie.categories; track cat) {
+              <span class="category-chip">{{ cat }}</span>
+            }
+          </div>
+        }
+
+        <!-- meta -->
+        <div class="movie-meta">
+          <span><i class="pi pi-clock"></i> {{ formatDuration(selectedMovie.duration) }}</span>
+          <span><i class="pi pi-calendar"></i> {{ selectedMovie.releaseDate | date:'dd/MM/yyyy' }}</span>
+          <span><i class="pi pi-globe"></i> {{ selectedMovie.originalLanguage }}</span>
+        </div>
+
+        <!-- sinopsis -->
+        <p class="detail-synopsis">{{ selectedMovie.synopsis }}</p>
+
+        <!-- equipo -->
+        @if (selectedMovie.crew.length > 0) {
+          <div class="detail-section">
+            <h4>Equipo</h4>
+            <ul class="crew-list">
+              @for (p of selectedMovie.crew; track p.name) {
+                <li><strong>{{ p.role }}:</strong> {{ p.name }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        <!-- reparto -->
+        @if (selectedMovie.cast.length > 0) {
+          <div class="detail-section">
+            <h4>Reparto</h4>
+            <div class="cast-list">
+              @for (a of selectedMovie.cast; track a.actorName) {
+                <div class="cast-item">
+                  @if (a.actorImageUrl) {
+                    <img class="cast-avatar" [src]="a.actorImageUrl" [alt]="a.actorName" />
+                  } @else {
+                    <span class="cast-avatar placeholder"><i class="pi pi-user"></i></span>
+                  }
+                  <div>
+                    <p class="cast-name">{{ a.actorName }}</p>
+                    @if (a.characterName) {
+                      <p class="cast-char">{{ a.characterName }}</p>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- trailer -->
+        @if (getYoutubeEmbedUrl(selectedMovie.trailerLink); as embedUrl) {
+          <div class="detail-section">
+            <h4>Trailer</h4>
+            <div class="trailer-wrapper">
+              <iframe
+                [src]="embedUrl"
+                frameborder="0"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </div>
+        }
+
+        @if (isClient) {
+          <div class="detail-section">
+            <p-button
+              label="Ver Funciones"
+              icon="pi pi-calendar"
+              styleClass="w-full"
+              (onClick)="goToShowtimes()"
+            />
+          </div>
+        }
+
+      </div>
+
+      <!-- columna derecha: poster slideshow + ratings -->
+      <div class="detail-right-col">
+
+        <!-- poster slideshow -->
+        <div class="poster-slideshow">
+          @if (currentPosterUrl) {
+            <img [src]="currentPosterUrl" [alt]="selectedMovie.title" />
+          } @else {
+            <div class="poster-placeholder large"><i class="pi pi-image"></i></div>
+          }
+          @if (posters.length > 1) {
+            <div class="poster-nav">
+              <button class="poster-nav-btn" (click)="prevPoster()">
+                <i class="pi pi-chevron-left"></i>
+              </button>
+              <div class="poster-dots">
+                @for (p of posters; track p.id; let i = $index) {
+                  <span class="poster-dot" [class.active]="i === posterIndex" (click)="posterIndex = i"></span>
+                }
+              </div>
+              <button class="poster-nav-btn" (click)="nextPoster()">
+                <i class="pi pi-chevron-right"></i>
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- ratings -->
+        <div class="detail-ratings">
+        <h3 class="section-title"><i class="pi pi-star"></i> Calificaciones</h3>
+
+        <!-- promedio -->
+        @if (ratingSummary && ratingSummary.averageScore !== null) {
+          <div class="average-score">
+            <span class="score-number">{{ ratingSummary.averageScore | number:'1.1-1' }}</span>
+            <div class="stars-display">
+              @for (star of starsArray(5); track star) {
+                <i class="pi pi-star-fill star-icon" [class.active]="star <= roundScore(ratingSummary.averageScore!)"></i>
+              }
+            </div>
+            <span class="score-count">{{ ratingSummary.ratings.length }} calificacion{{ ratingSummary.ratings.length !== 1 ? 'es' : '' }}</span>
+          </div>
+        } @else {
+          <p class="no-data">Sin calificaciones aún.</p>
+        }
+
+
+
+        <!-- lista de calificaciones -->
+        @if (ratingSummary && ratingSummary.ratings.length > 0) {
+          <div class="ratings-list">
+            @for (r of ratingSummary.ratings; track r.id) {
+              <div class="rating-item">
+                <div class="rating-header">
+                  <span class="rating-user"><i class="pi pi-user"></i> {{ r.userName ?? 'Usuario' }}</span>
+                  <div class="stars-mini">
+                    @for (star of starsArray(5); track star) {
+                      <i class="pi pi-star-fill star-mini" [class.active]="star <= r.score"></i>
+                    }
+                  </div>
+                </div>
+                <span class="rating-date">{{ r.createdAt | date:'dd/MM/yyyy' }}{{ r.edited ? ' (editado)' : '' }}</span>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- mi calificación -->
+        @if (isClient) {
+          <div class="my-rating-section">
+            <h4>Mi calificación</h4>
+            @if (myRating) {
+              @if (editingRatingId === myRating.id) {
+                <div class="rating-edit-form">
+                  <p-rating [(ngModel)]="editScore" [stars]="5" />
+                  <div class="form-actions">
+                    <p-button label="Guardar" size="small" (onClick)="saveEditRating(myRating.id)" />
+                    <p-button label="Cancelar" size="small" severity="secondary" [outlined]="true" (onClick)="cancelEditRating()" />
+                  </div>
+                </div>
+              } @else {
+                <div class="my-rating-display">
+                  <div class="stars-mini">
+                    @for (star of starsArray(5); track star) {
+                      <i class="pi pi-star-fill star-mini" [class.active]="star <= myRating.score"></i>
+                    }
+                  </div>
+                  <p-button icon="pi pi-pencil" size="small" [text]="true" (onClick)="startEditRating(myRating)" />
+                </div>
+              }
+            } @else {
+              <div class="rating-form">
+                <p-rating [(ngModel)]="newScore" [stars]="5" />
+                <p-button
+                  label="Enviar"
+                  size="small"
+                  [disabled]="!newScore || submittingRating"
+                  [loading]="submittingRating"
+                  (onClick)="submitRating()"
+                />
+              </div>
+            }
+          </div>
+        } @else if (!isAuthenticated) {
+          <p class="auth-hint"><i class="pi pi-lock"></i> Inicia sesión para calificar</p>
+        }
+
+        </div><!-- /detail-ratings -->
+      </div><!-- /detail-right-col -->
+    </div><!-- /detail-layout -->
+
+    <!-- ── Comentarios ────────────────────────────────────────── -->
+    <div class="comments-section">
+      <h3 class="section-title"><i class="pi pi-comments"></i> Comentarios</h3>
+
+      @if (isClient) {
+        <div class="comment-form">
+          <textarea
+            pTextarea
+            [autoResize]="true"
+            rows="3"
+            placeholder="Escribe un comentario..."
+            [(ngModel)]="newCommentContent"
+          ></textarea>
+          <p-button
+            label="Publicar"
+            icon="pi pi-send"
+            size="small"
+            [disabled]="!newCommentContent.trim() || submittingComment"
+            [loading]="submittingComment"
+            (onClick)="submitComment()"
+          />
+        </div>
+      } @else if (!isAuthenticated) {
+        <p class="auth-hint"><i class="pi pi-lock"></i> Inicia sesión para comentar</p>
+      }
+
+      @if (comments.length === 0) {
+        <p class="no-data">No hay comentarios aún. ¡Sé el primero!</p>
+      } @else {
+        <div class="comments-list">
+          @for (comment of comments; track comment.id) {
+            <div class="comment-item">
+              <div class="comment-header">
+                <span class="comment-user"><i class="pi pi-user"></i> {{ comment.userName ?? 'Usuario' }}</span>
+                <span class="comment-date">{{ comment.createdAt | date:'dd/MM/yyyy HH:mm' }}{{ comment.edited ? ' (editado)' : '' }}</span>
+              </div>
+
+              @if (editingCommentId === comment.id) {
+                <div class="comment-edit-form">
+                  <textarea
+                    pTextarea
+                    [autoResize]="true"
+                    rows="2"
+                    [(ngModel)]="editCommentContent"
+                  ></textarea>
+                  <div class="form-actions">
+                    <p-button label="Guardar" size="small" (onClick)="saveEditComment(comment.id)" />
+                    <p-button label="Cancelar" size="small" severity="secondary" [outlined]="true" (onClick)="cancelEditComment()" />
+                  </div>
+                </div>
+              } @else {
+                <p class="comment-content">{{ comment.content }}</p>
+                @if (comment.userId === currentUserId) {
+                  <div class="comment-actions">
+                    <p-button icon="pi pi-pencil" size="small" [text]="true" (onClick)="startEditComment(comment)" />
+                    <p-button icon="pi pi-trash" size="small" [text]="true" severity="danger" (onClick)="deleteComment(comment.id)" />
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+  }
+</p-dialog>

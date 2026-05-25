@@ -1,20 +1,26 @@
 ﻿<div class="profile-grid">
   <app-shared-card title="Mi perfil">
-    <div class="readonly-group">
-      <label>Correo actual</label>
-      <p class="readonly-value">{{ profile?.email || '-' }}</p>
-    </div>
-    <div class="readonly-group">
-      <label>Rol</label>
-      <p class="readonly-value">{{ profile?.role || '-' }}</p>
-    </div>
+    @if (loadingProfile) {
+      <p>Cargando perfil...</p>
+    } @else if (profileError) {
+      <p class="message error">{{ profileError }}</p>
+    } @else {
+      <div class="readonly-group">
+        <label>Correo actual</label>
+        <p class="readonly-value">{{ profile?.email || '-' }}</p>
+      </div>
+      <div class="readonly-group">
+        <label>Rol</label>
+        <p class="readonly-value">{{ profile?.role || '-' }}</p>
+      </div>
+    }
   </app-shared-card>
 
   <app-shared-card title="Seguridad" footer="Te enviaremos un enlace a tu correo">
     <button
       pButton
       type="button"
-      [disabled]="loadingPassword"
+      [disabled]="loadingPassword || loadingProfile"
       [label]="loadingPassword ? 'Enviando...' : 'Enviar cambio de contraseña'"
       (click)="requestPasswordChange()"></button>
 
@@ -26,3 +32,4 @@
     }
   </app-shared-card>
 </div>
+

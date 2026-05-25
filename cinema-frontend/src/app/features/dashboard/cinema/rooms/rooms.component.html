@@ -1,13 +1,261 @@
-﻿<div class="page-wrapper">
+﻿<p-toast position="top-right" appendTo="body" />
+
+<div class="page-wrapper">
+  @if (cinemaId) {
+      <app-ad-banner [cinemaId]="cinemaId"></app-ad-banner>
+  }
   <p-card styleClass="page-card">
     <ng-template pTemplate="header">
       <div class="page-header">
-        <h1 class="page-title">{{ title }}</h1>
-        <p class="page-subtitle">{{ subtitle }}</p>
+        <div class="header-row">
+          <div>
+            <h1 class="page-title">{{ title }}</h1>
+            <p class="page-subtitle">{{ subtitle }}</p>
+          </div>
+          <p-button label="Nueva sala" icon="pi pi-plus" (onClick)="openCreate()" />
+        </div>
       </div>
     </ng-template>
+
     <div class="page-content">
-      <p-progressSpinner *ngIf="false"/>
+      @if (loading) {
+        <div class="spinner-center"><p-progressSpinner /></div>
+      } @else if (theaters.length === 0) {
+        <div class="empty-state">
+          <i class="pi pi-building" style="font-size:3rem;color:var(--color-secondary)"></i>
+          <p>No hay salas registradas. Crea la primera.</p>
+        </div>
+      } @else {
+        <div class="theater-grid">
+          @for (theater of theaters; track theater.id) {
+            <div class="theater-card">
+              <div class="theater-card-header">
+                <span class="theater-name">{{ theater.name }}</span>
+                <p-tag
+                  [value]="theater.visible ? 'Activa' : 'Inactiva'"
+                  [severity]="theater.visible ? 'success' : 'secondary'"
+                />
+              </div>
+              <div class="theater-card-body">
+                <div class="info-row">
+                  <i class="pi pi-box"></i>
+                  <span>{{ theater.typeTheaterName }}</span>
+                </div>
+                <div class="info-row">
+                  <i class="pi pi-th-large"></i>
+                  <span>{{ theater.rows }} filas × {{ theater.cols }} columnas ({{ totalSeats(theater) }} asientos)</span>
+                </div>
+                <div class="badges-row">
+                  <span class="badge" [class.badge-on]="theater.allowComments">
+                    <i class="pi pi-comment"></i> Comentarios
+                  </span>
+                  <span class="badge" [class.badge-on]="theater.allowRatings">
+                    <i class="pi pi-star"></i> Calificaciones
+                  </span>
+                </div>
+              </div>
+              <div class="theater-card-footer">
+                <p-button label="Ver más" icon="pi pi-eye" size="small" severity="secondary" (onClick)="openDetail(theater)" />
+              </div>
+            </div>
+          }
+        </div>
+      }
     </div>
   </p-card>
 </div>
+
+<!-- ── Modal Detalle Sala ───────────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="showDetailModal"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width:'780px', 'max-width':'95vw'}"
+  [header]="selectedTheater?.name ?? 'Sala'"
+>
+  @if (selectedTheater) {
+    <!-- Tabs -->
+    <div class="modal-tabs">
+      <button class="modal-tab" [class.active]="detailTab==='info'" (click)="selectTab('info')">
+        <i class="pi pi-info-circle"></i> Información
+      </button>
+      <button class="modal-tab" [class.active]="detailTab==='comments'" (click)="selectTab('comments')">
+        <i class="pi pi-comment"></i> Comentarios
+      </button>
+      <button class="modal-tab" [class.active]="detailTab==='ratings'" (click)="selectTab('ratings')">
+        <i class="pi pi-star"></i> Calificaciones
+      </button>
+    </div>
+
+    <!-- Tab: Info -->
+    @if (detailTab === 'info') {
+      <div class="modal-section">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Nombre</label>
+            <input pInputText [(ngModel)]="editForm.name" placeholder="Nombre de la sala" />
+          </div>
+          <div class="form-field">
+            <label>Tipo de sala</label>
+            <p-select
+              [options]="typeTheaterOptions"
+              optionLabel="label"
+              optionValue="value"
+              [(ngModel)]="editForm.typeTheaterId"
+              placeholder="Selecciona un tipo"
+            />
+          </div>
+        </div>
+        <div class="toggles-row">
+          <div class="toggle-item">
+            <p-toggleswitch [(ngModel)]="editForm.isVisible" />
+            <span>Sala visible</span>
+          </div>
+          <div class="toggle-item">
+            <p-toggleswitch [(ngModel)]="editForm.allowComments" />
+            <span>Permitir comentarios</span>
+          </div>
+          <div class="toggle-item">
+            <p-toggleswitch [(ngModel)]="editForm.allowRatings" />
+            <span>Permitir calificaciones</span>
+          </div>
+        </div>
+        <div class="info-readonly">
+          <span><b>Filas:</b> {{ selectedTheater.rows }}</span>
+          <span><b>Columnas:</b> {{ selectedTheater.cols }}</span>
+          <span><b>Total asientos:</b> {{ totalSeats(selectedTheater) }}</span>
+        </div>
+
+        <!-- Mapa visual de distribución de asientos (solo referencia) -->
+        <div class="seats-reference-section">
+          <p class="seats-ref-label"><i class="pi pi-th-large"></i> Distribución de asientos</p>
+          @if (loadingSeats) {
+            <div class="spinner-center-sm"><p-progressSpinner [style]="{width:'24px',height:'24px'}" /></div>
+          } @else if (seats.length > 0) {
+            <div class="seats-grid">
+              @for (row of seats; track row[0]?.rowName) {
+                <div class="seat-row">
+                  <span class="row-label">{{ row[0].rowName }}</span>
+                  @for (seat of row; track seat.id) {
+                    <div class="seat-cell seat-ref" [title]="seat.rowName + seat.colNumber">
+                      {{ seat.colNumber }}
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="modal-actions">
+          <p-button label="Guardar cambios" icon="pi pi-check" [loading]="savingUpdate" (onClick)="saveUpdate()" />
+        </div>
+      </div>
+    }
+
+    <!-- Tab: Comentarios -->
+    @if (detailTab === 'comments') {
+      <div class="modal-section">
+        @if (loadingComments) {
+          <div class="spinner-center"><p-progressSpinner /></div>
+        } @else if (comments.length === 0) {
+          <p class="empty-text">No hay comentarios en esta sala.</p>
+        } @else {
+          <div class="comments-list">
+            @for (comment of comments; track comment.id) {
+              <div class="comment-item">
+                <div class="comment-header">
+                  <span class="comment-user">{{ comment.userName ?? 'Usuario' }}</span>
+                  @if (comment.edited) { <span class="edited-badge">editado</span> }
+                  <span class="comment-date">{{ comment.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+                <p class="comment-content">{{ comment.content }}</p>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Tab: Calificaciones -->
+    @if (detailTab === 'ratings') {
+      <div class="modal-section">
+        @if (loadingRatings) {
+          <div class="spinner-center"><p-progressSpinner /></div>
+        } @else if (!ratingSummary || ratingSummary.ratings.length === 0) {
+          <p class="empty-text">No hay calificaciones en esta sala.</p>
+        } @else {
+          <div class="ratings-header">
+            <span class="avg-score">{{ ratingSummary.averageScore | number:'1.1-1' }}</span>
+            <div class="stars">
+              @for (star of starArray(ratingSummary.averageScore ?? 0); track star) {
+                <i class="pi" [class.pi-star-fill]="star <= (ratingSummary.averageScore ?? 0)" [class.pi-star]="star > (ratingSummary.averageScore ?? 0)"></i>
+              }
+            </div>
+            <span class="rating-count">{{ ratingSummary.ratings.length }} calificaciones</span>
+          </div>
+          <div class="ratings-list">
+            @for (rating of ratingSummary.ratings; track rating.id) {
+              <div class="rating-item">
+                <div class="rating-stars">
+                  @for (star of starArray(5); track star) {
+                    <i class="pi" [class.pi-star-fill]="star <= rating.score" [class.pi-star]="star > rating.score"></i>
+                  }
+                </div>
+                <span class="rating-date">{{ rating.createdAt | date:'dd/MM/yyyy' }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+</p-dialog>
+
+<!-- ── Modal Crear Sala ────────────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="showCreateModal"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width:'500px','max-width':'95vw'}"
+  header="Nueva sala"
+>
+  <div class="form-grid">
+    <div class="form-field">
+      <label>Nombre *</label>
+      <input pInputText [(ngModel)]="createForm.name" placeholder="Nombre de la sala" />
+    </div>
+    <div class="form-field">
+      <label>Tipo de sala *</label>
+      <p-select
+        [options]="typeTheaterOptions"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="createForm.typeTheaterId"
+        placeholder="Selecciona un tipo"
+      />
+    </div>
+    <div class="form-field">
+      <label>Filas *</label>
+      <p-inputnumber [(ngModel)]="createForm.rows" [min]="1" [max]="30" [showButtons]="true" />
+    </div>
+    <div class="form-field">
+      <label>Columnas *</label>
+      <p-inputnumber [(ngModel)]="createForm.cols" [min]="1" [max]="30" [showButtons]="true" />
+    </div>
+  </div>
+  <p class="create-hint">Se generarán {{ createForm.rows * createForm.cols }} asientos automáticamente.</p>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" (onClick)="showCreateModal=false" />
+    <p-button
+      label="Crear sala"
+      icon="pi pi-check"
+      [loading]="creating"
+      [disabled]="!createForm.name || !createForm.typeTheaterId"
+      (onClick)="submitCreate()"
+    />
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,639 @@
+@use 'sass:color';
+
+/* ── Variables ─────────────────────────────────────────────────────────────── */
+$accent: #6366f1;
+$accent-light: #eef2ff;
+$surface: #ffffff;
+$surface-alt: #f8fafc;
+$border: #e2e8f0;
+$text-primary: #1e293b;
+$text-secondary: #64748b;
+$radius: 12px;
+$radius-sm: 8px;
+
+/* ── Page layout ────────────────────────────────────────────────────────────── */
+
+.showtimes-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: $text-primary;
+      margin: 0;
+
+      span { color: $accent; }
+    }
+
+    i { font-size: 1.3rem; color: $accent; }
+  }
+}
+
+/* ── Breadcrumb ─────────────────────────────────────────────────────────────── */
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  color: $text-secondary;
+  flex-wrap: wrap;
+
+  span {
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+    background: $surface-alt;
+    border: 1px solid $border;
+
+    &.active {
+      background: $accent-light;
+      color: $accent;
+      border-color: $accent;
+      font-weight: 600;
+    }
+  }
+}
+
+/* ── Spinner ────────────────────────────────────────────────────────────────── */
+
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  padding: 4rem 0;
+}
+
+/* ── Step section ───────────────────────────────────────────────────────────── */
+
+.step-section {
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.step-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: $text-primary;
+  margin: 0 0 1.25rem;
+
+  i { color: $accent; }
+}
+
+.step-nav {
+  margin-bottom: 0.5rem;
+}
+
+/* ── Cards grid ─────────────────────────────────────────────────────────────── */
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.selection-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.1rem 1.25rem;
+  background: $surface;
+  border: 1.5px solid $border;
+  border-radius: $radius;
+  cursor: pointer;
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
+
+  &:hover {
+    border-color: $accent;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.12);
+    transform: translateY(-2px);
+  }
+
+  .card-icon {
+    font-size: 1.4rem;
+    color: $accent;
+    flex-shrink: 0;
+  }
+
+  .card-name {
+    flex: 1;
+    font-weight: 600;
+    color: $text-primary;
+    font-size: 0.95rem;
+  }
+
+  .card-arrow {
+    color: $text-secondary;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  &.cinema-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+
+    .cinema-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      width: 100%;
+    }
+
+    .cinema-card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      font-size: 0.8rem;
+      color: $text-secondary;
+      padding-left: 0.1rem;
+
+      span {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+
+      i { font-size: 0.75rem; }
+    }
+
+    .card-arrow {
+      align-self: flex-end;
+    }
+  }
+}
+
+/* ── Empty state ────────────────────────────────────────────────────────────── */
+
+.empty-state {
+  color: $text-secondary;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.empty-state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  background: $surface-alt;
+  border: 1.5px dashed $border;
+  border-radius: $radius;
+  color: $text-secondary;
+  text-align: center;
+
+  i { font-size: 2.5rem; color: $accent; }
+  p { margin: 0; font-size: 0.95rem; }
+}
+
+/* ── Theaters grid ──────────────────────────────────────────────────────────── */
+
+.theaters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.1rem;
+}
+
+.theater-card {
+  display: flex;
+  flex-direction: column;
+  background: $surface;
+  border: 1.5px solid $border;
+  border-radius: $radius;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s;
+
+  &:hover {
+    border-color: $accent;
+    box-shadow: 0 4px 18px rgba(99, 102, 241, 0.14);
+    transform: translateY(-2px);
+  }
+
+  .theater-card-top {
+    padding: 1.1rem 1.25rem 0.75rem;
+    background: $accent-light;
+  }
+
+  .theater-type-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $accent;
+    background: white;
+    border: 1px solid $accent;
+    border-radius: 20px;
+    padding: 0.15rem 0.5rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .theater-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0 0 0.25rem;
+  }
+
+  .theater-seats {
+    font-size: 0.8rem;
+    color: $text-secondary;
+    margin: 0;
+  }
+
+  .theater-card-bottom {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.25rem;
+    flex-wrap: wrap;
+
+    .showtime-count {
+      font-size: 0.8rem;
+      color: $text-secondary;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .feature-badge {
+      font-size: 0.75rem;
+      color: $accent;
+    }
+  }
+}
+
+/* ── Modal ──────────────────────────────────────────────────────────────────── */
+
+.modal-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+
+  .theater-type-chip {
+    font-size: 0.7rem;
+    background: $accent-light;
+    color: $accent;
+    border: 1px solid $accent;
+    border-radius: 20px;
+    padding: 0.15rem 0.55rem;
+    font-weight: 600;
+  }
+}
+
+.theater-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.theater-info-bar {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  border-radius: $radius-sm;
+  border: none;
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.85);
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255, 255, 255, 0.12);
+    padding: 0.4rem 0.85rem;
+    border-radius: 20px;
+  }
+
+  strong {
+    color: #ffffff;
+    font-weight: 700;
+  }
+
+  i { opacity: 0.9; }
+}
+
+/* ── Showtimes section ──────────────────────────────────────────────────────── */
+
+.showtimes-section {
+  .section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    i { color: $accent; }
+  }
+}
+
+.day-select-wrapper {
+  margin-bottom: 1rem;
+
+  :host ::ng-deep .day-select {
+    min-width: 220px;
+
+    .p-select {
+      border: 2px solid $accent;
+      border-radius: $radius-sm;
+      background: color.adjust($accent, $lightness: 42%);
+    }
+
+    .p-select-label {
+      color: $accent;
+      font-weight: 600;
+      font-size: 0.88rem;
+    }
+
+    .p-select-dropdown {
+      color: $accent;
+    }
+  }
+}
+
+.showtimes-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.showtime-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 1rem;
+  background: $surface;
+  border: 1.5px solid $border;
+  border-radius: $radius-sm;
+  min-width: 160px;
+
+  .version-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #7c3aed;
+    background: #f5f3ff;
+    border-radius: 20px;
+    padding: 0.15rem 0.5rem;
+    align-self: flex-start;
+  }
+
+  .time-range {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: $text-primary;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+
+    i { color: $accent; font-size: 0.8rem; }
+  }
+
+  .showtime-alert {
+    font-size: 0.75rem;
+    color: #b45309;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+}
+
+/* ── Modal bottom (ratings + comments) ─────────────────────────────────────── */
+
+.modal-bottom-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1.5rem;
+  border-top: 1px solid $border;
+  padding-top: 1.25rem;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $text-primary;
+  margin: 0 0 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  i { color: $accent; }
+}
+
+/* ── Ratings ────────────────────────────────────────────────────────────────── */
+
+.average-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 1rem;
+  background: $surface-alt;
+  border-radius: $radius-sm;
+  margin-bottom: 0.9rem;
+
+  .score-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: $accent;
+  }
+
+  .stars-display {
+    display: flex;
+    gap: 0.2rem;
+  }
+
+  .score-count {
+    font-size: 0.78rem;
+    color: $text-secondary;
+  }
+
+  .no-ratings {
+    font-style: italic;
+    color: #94a3b8;
+  }
+}
+
+.rating-submit {
+  margin-top: 0.9rem;
+}
+
+.star-icon {
+  font-size: 1rem;
+  color: #d1d5db;
+  &.active { color: #f59e0b; }
+}
+
+.star-mini {
+  font-size: 0.75rem;
+  color: #d1d5db;
+  &.active { color: #f59e0b; }
+}
+
+.stars-row {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+
+  .score-badge {
+    font-size: 0.8rem;
+    color: $text-secondary;
+    margin-left: 0.3rem;
+  }
+}
+
+.my-rating-box, .rating-form {
+  margin-bottom: 0.75rem;
+
+  .my-rating-label {
+    font-size: 0.82rem;
+    color: $text-secondary;
+    margin: 0 0 0.5rem;
+  }
+
+  p-rating {
+    display: block;
+    margin-bottom: 0.9rem;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+}
+
+.ratings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.rating-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.6rem;
+  background: $surface-alt;
+  border-radius: $radius-sm;
+  font-size: 0.8rem;
+
+  .rating-date { color: $text-secondary; }
+}
+
+/* ── Comments ────────────────────────────────────────────────────────────────── */
+
+.comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+
+  textarea { width: 100%; resize: vertical; }
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.comment-item {
+  padding: 0.75rem;
+  background: $surface-alt;
+  border-radius: $radius-sm;
+  border: 1px solid $border;
+
+  .comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.35rem;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .comment-user {
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: $text-secondary;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .comment-date { font-size: 0.75rem; color: $text-secondary; }
+
+  .comment-content {
+    font-size: 0.88rem;
+    color: $text-primary;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .comment-actions {
+    display: flex;
+    gap: 0.25rem;
+    margin-top: 0.3rem;
+  }
+
+  .comment-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    .form-actions { display: flex; gap: 0.4rem; }
+  }
+}
+
+.auth-hint {
+  font-size: 0.83rem;
+  color: $text-secondary;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0;
+}
+
+.no-data {
+  font-size: 0.85rem;
+  color: $text-secondary;
+  text-align: center;
+  padding: 1rem 0;
+}

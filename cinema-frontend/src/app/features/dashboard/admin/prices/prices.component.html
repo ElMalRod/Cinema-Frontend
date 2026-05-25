@@ -1,13 +1,78 @@
-﻿<div class="page-wrapper">
-  <p-card styleClass="page-card">
-    <ng-template pTemplate="header">
-      <div class="page-header">
-        <h1 class="page-title">{{ title }}</h1>
-        <p class="page-subtitle">{{ subtitle }}</p>
+﻿<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="prices-container">
+  <app-shared-card title="Gestión de Precios de Publicidad" footer="Configura los costos base para los anunciantes">
+    
+    <div class="columns is-vcentered mb-4">
+      <div class="column">
+        <p class="subtitle is-6 has-text-grey">Administra las tarifas según el formato y duración del anuncio.</p>
       </div>
-    </ng-template>
-    <div class="page-content">
-      <p-progressSpinner *ngIf="false"/>
+      <div class="column is-narrow">
+        <button pButton type="button" label="Nuevo Precio" icon="pi pi-plus" class="app-btn-accent" (click)="openNew()"></button>
+      </div>
     </div>
-  </p-card>
+
+    <p-table [value]="prices" [loading]="loading" [rowHover]="true" styleClass="p-datatable-striped" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Tipo de Anuncio</th>
+          <th>Duración</th>
+          <th>Precio (Q)</th>
+          <th>Fecha Creación</th>
+          <th class="has-text-centered">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-price>
+        <tr>
+          <td>
+            <span class="tag-type">{{ getAdTypeName(price.adType) }}</span>
+          </td>
+          <td>{{ getAdPeriodName(price.adPeriod) }}</td>
+          <td class="has-text-weight-bold has-text-primary">{{ price.price | currency:'GTQ':'symbol-narrow' }}</td>
+          <td>{{ price.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td class="has-text-centered">
+            <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" (click)="editPrice(price)"></button>
+            <button pButton pRipple icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" (click)="deletePrice(price)"></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="has-text-centered p-4">No hay precios registrados en el sistema.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </app-shared-card>
 </div>
+
+<p-dialog [(visible)]="displayModal" [style]="{width: '450px'}" [header]="isEditing ? 'Editar Precio' : 'Registrar Nuevo Precio'" [modal]="true" class="p-fluid">
+  <ng-template pTemplate="content">
+    <form [formGroup]="priceForm" (ngSubmit)="savePrice()">
+      
+      <div class="field mb-4">
+        <label for="adType" class="label">Tipo de Anuncio</label>
+        <p-dropdown id="adType" [options]="adTypes" formControlName="adType" placeholder="Seleccione un tipo" appendTo="body"></p-dropdown>
+      </div>
+
+      <div class="field mb-4">
+        <label for="adPeriod" class="label">Duración</label>
+        <p-dropdown id="adPeriod" [options]="adPeriods" formControlName="adPeriod" placeholder="Seleccione un periodo" appendTo="body"></p-dropdown>
+      </div>
+
+      <div class="field mb-4">
+        <label for="price" class="label">Costo Monetario</label>
+        <p-inputNumber id="price" formControlName="price" mode="currency" currency="GTQ" locale="es-GT" placeholder="0.00"></p-inputNumber>
+        <small class="p-error" *ngIf="priceForm.get('price')?.invalid && priceForm.get('price')?.touched">
+          El precio es requerido y debe ser mayor a 0.
+        </small>
+      </div>
+
+    </form>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="hideModal()"></button>
+    <button pButton pRipple [label]="isEditing ? 'Actualizar' : 'Guardar'" icon="pi pi-check" class="app-btn-primary" [disabled]="priceForm.invalid" (click)="savePrice()"></button>
+  </ng-template>
+</p-dialog>

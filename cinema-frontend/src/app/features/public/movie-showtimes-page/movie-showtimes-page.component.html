@@ -1,0 +1,375 @@
+<p-toast position="top-right" appendTo="body" />
+
+<div class="showtimes-page">
+
+  <!-- ── Header ────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <p-button
+      icon="pi pi-arrow-left"
+      label="Volver a películas"
+      [text]="true"
+      severity="secondary"
+      (onClick)="backToMovies()"
+    />
+    <div class="header-title">
+      <i class="pi pi-ticket"></i>
+      <h1>Funciones para: <span>{{ movieTitle }}</span></h1>
+    </div>
+  </div>
+
+  <!-- ── Breadcrumb ─────────────────────────────────────────────── -->
+  <div class="breadcrumb">
+    <span [class.active]="step === 'companies'">Empresas</span>
+    @if (step === 'cinemas' || step === 'theaters') {
+      <i class="pi pi-chevron-right"></i>
+      <span [class.active]="step === 'cinemas'">{{ selectedCompany?.name }}</span>
+    }
+    @if (step === 'theaters') {
+      <i class="pi pi-chevron-right"></i>
+      <span class="active">{{ selectedCinema?.name }}</span>
+    }
+  </div>
+
+  <!-- ── Spinner global ─────────────────────────────────────────── -->
+  @if (loading) {
+    <div class="spinner-container">
+      <p-progressSpinner strokeWidth="4" />
+    </div>
+  } @else {
+
+    <!-- ══ PASO 1: Empresas ══════════════════════════════════════ -->
+    @if (step === 'companies') {
+      <div class="step-section">
+        <h2 class="step-title"><i class="pi pi-building"></i> Selecciona una empresa</h2>
+        @if (companies.length === 0) {
+          <p class="empty-state">No hay empresas disponibles.</p>
+        } @else {
+          <div class="cards-grid">
+            @for (company of companies; track company.id) {
+              <div class="selection-card" (click)="selectCompany(company)">
+                <i class="pi pi-building card-icon"></i>
+                <span class="card-name">{{ company.name }}</span>
+                <i class="pi pi-chevron-right card-arrow"></i>
+              </div>
+            }
+          </div>
+        }
+        <app-ad-banner></app-ad-banner>
+      </div>
+    }
+
+    <!-- ══ PASO 2: Sucursales (Cines) ════════════════════════════ -->
+    @if (step === 'cinemas') {
+      <div class="step-section">
+        <div class="step-nav">
+          <p-button
+            icon="pi pi-arrow-left"
+            label="Empresas"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            (onClick)="backToCompanies()"
+          />
+        </div>
+        <app-ad-banner></app-ad-banner>
+        <h2 class="step-title"><i class="pi pi-map-marker"></i> Sucursales de {{ selectedCompany?.name }}</h2>
+        @if (cinemas.length === 0) {
+          <p class="empty-state">Esta empresa no tiene sucursales disponibles.</p>
+        } @else {
+          <div class="cards-grid">
+            @for (cinema of cinemas; track cinema.id) {
+              <div class="selection-card cinema-card" (click)="selectCinema(cinema)">
+                <div class="cinema-card-header">
+                  <i class="pi pi-video card-icon"></i>
+                  <span class="card-name">{{ cinema.name }}</span>
+                </div>
+                <div class="cinema-card-info">
+                  <span><i class="pi pi-map-marker"></i> {{ cinema.address }}</span>
+                  @if (cinema.phone) {
+                    <span><i class="pi pi-phone"></i> {{ cinema.phone }}</span>
+                  }
+                </div>
+                <i class="pi pi-chevron-right card-arrow"></i>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ══ PASO 3: Salas ══════════════════════════════════════════ -->
+    @if (step === 'theaters') {
+      <div class="step-section">
+        <div class="step-nav">
+          <p-button
+            icon="pi pi-arrow-left"
+            label="Sucursales"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            (onClick)="backToCinemas()"
+          />
+        </div>
+        <app-ad-banner [cinemaId]="selectedCinema?.id"></app-ad-banner>
+        <h2 class="step-title"><i class="pi pi-th-large"></i> Salas en {{ selectedCinema?.name }}</h2>
+        @if (theaters.length === 0) {
+          <div class="empty-state-box">
+            <i class="pi pi-info-circle"></i>
+            <p>No hay salas disponibles con funciones para esta película en este cine.</p>
+          </div>
+        } @else {
+          <div class="theaters-grid">
+            @for (theater of theaters; track theater.id) {
+              <div class="theater-card" (click)="openTheater(theater)">
+                <div class="theater-card-top">
+                  <span class="theater-type-badge">{{ theater.typeTheaterName }}</span>
+                  <h3 class="theater-name">{{ theater.name }}</h3>
+                  <p class="theater-seats">{{ theater.rows * theater.cols }} asientos ({{ theater.rows }}×{{ theater.cols }})</p>
+                </div>
+                <div class="theater-card-bottom">
+                  <span class="showtime-count">
+                    <i class="pi pi-clock"></i>
+                    {{ theater.showtimes.length }} función{{ theater.showtimes.length !== 1 ? 'es' : '' }}
+                  </span>
+                  @if (theater.allowComments) {
+                    <span class="feature-badge"><i class="pi pi-comments"></i></span>
+                  }
+                  @if (theater.allowRatings) {
+                    <span class="feature-badge"><i class="pi pi-star"></i></span>
+                  }
+                  <p-button
+                    label="Ver sala"
+                    icon="pi pi-eye"
+                    size="small"
+                    [outlined]="true"
+                    styleClass="mt-auto"
+                  />
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+  }
+</div>
+
+<!-- ══ MODAL SALA ═══════════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="showTheaterModal"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="theater-detail-dialog"
+  [style]="{ width: '95vw', 'max-width': '1100px' }"
+  (onHide)="closeTheaterModal()"
+>
+  @if (selectedTheater) {
+
+    <!-- título del modal -->
+    <ng-template pTemplate="header">
+      <div class="modal-header-title">
+        <i class="pi pi-th-large"></i>
+        <span>{{ selectedTheater.name }}</span>
+        <span class="theater-type-chip">{{ selectedTheater.typeTheaterName }}</span>
+      </div>
+    </ng-template>
+
+    <div class="theater-modal-content">
+      <app-ad-banner [cinemaId]="selectedCinema?.id"></app-ad-banner>
+
+      <!-- ── Info de la sala ───────────────────────────────────── -->
+      <div class="theater-info-bar">
+        <span><i class="pi pi-th-large"></i> <strong>Tipo:</strong> {{ selectedTheater.typeTheaterName }}</span>
+        <span><i class="pi pi-users"></i> <strong>Capacidad:</strong> {{ selectedTheater.rows * selectedTheater.cols }} asientos</span>
+        <span><i class="pi pi-table"></i> <strong>Distribución:</strong> {{ selectedTheater.rows }} filas × {{ selectedTheater.cols }} columnas</span>
+      </div>
+
+      <!-- ── Funciones por día ─────────────────────────────────── -->
+      <div class="showtimes-section">
+        <h3 class="section-title"><i class="pi pi-calendar"></i> Funciones programadas</h3>
+
+        @if (selectedTheater.showtimes.length === 0) {
+          <p class="no-data">No hay funciones programadas para esta sala.</p>
+        } @else {
+          <!-- Selector de día -->
+          <div class="day-select-wrapper">
+            <p-select
+              [options]="dayOptions"
+              optionLabel="label"
+              optionValue="value"
+              [(ngModel)]="selectedDay"
+              placeholder="Selecciona un día"
+              styleClass="day-select"
+            />
+          </div>
+
+          <!-- Funciones del día seleccionado -->
+          @if (selectedDay) {
+            <div class="showtimes-row">
+              @for (show of showtimesByDay.get(selectedDay) ?? []; track show.id) {
+                <div class="showtime-card">
+                  <span class="version-badge">{{ show.versionTypeName }}</span>
+                  <span class="time-range">
+                    <i class="pi pi-clock"></i>
+                    {{ show.startShowtime }} – {{ show.endShowtime }}
+                  </span>
+                  @if (show.alert) {
+                    <span class="showtime-alert"><i class="pi pi-exclamation-triangle"></i> {{ show.alert }}</span>
+                  }
+                  <p-button
+                    label="Seleccionar"
+                    icon="pi pi-check-circle"
+                    size="small"
+                    [outlined]="true"
+                    (onClick)="goToSeatSelection(show)"
+                  />
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+
+      <!-- ── Ratings y Comentarios ──────────────────────────────── -->
+      <div class="modal-bottom-grid">
+
+        <!-- Calificaciones -->
+        <div class="ratings-col">
+          <h3 class="section-title"><i class="pi pi-star"></i> Calificaciones</h3>
+
+            <div class="average-score">
+              <span class="score-number">{{ (ratingSummary?.averageScore ?? 0) | number:'1.1-1' }}</span>
+              <div class="stars-display">
+                @for (star of starsArray(5); track star) {
+                  <i class="pi pi-star-fill star-icon" [class.active]="star <= roundScore(ratingSummary?.averageScore ?? 0)"></i>
+                }
+              </div>
+              @if (!ratingSummary || ratingSummary.ratings.length === 0) {
+                <span class="score-count no-ratings">Sin calificaciones aún</span>
+              } @else {
+                <span class="score-count">{{ ratingSummary.ratings.length }} calificacion{{ ratingSummary.ratings.length !== 1 ? 'es' : '' }}</span>
+              }
+            </div>
+
+            @if (isAuthenticated) {
+              @if (myRating) {
+                <div class="my-rating-box">
+                  <p class="my-rating-label">Tu calificación</p>
+                  @if (editingRatingId === myRating.id) {
+                    <div class="rating-form">
+                      <p-rating [(ngModel)]="editScore" />
+                      <div class="form-actions">
+                        <p-button label="Guardar" size="small" (onClick)="saveEditRating(myRating.id)" [loading]="submittingRating" />
+                        <p-button label="Cancelar" size="small" severity="secondary" [outlined]="true" (onClick)="cancelEditRating()" />
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="stars-row">
+                      @for (star of starsArray(5); track star) {
+                        <i class="pi pi-star-fill star-icon" [class.active]="star <= myRating.score"></i>
+                      }
+                      <span class="score-badge">{{ myRating.score }}/5</span>
+                      <p-button icon="pi pi-pencil" [text]="true" size="small" (onClick)="startEditRating(myRating)" />
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="rating-form">
+                  <p class="my-rating-label">Califica esta sala</p>
+                  <p-rating [(ngModel)]="newScore" />
+                  <div class="rating-submit">
+                    <p-button
+                      label="Enviar calificación"
+                      icon="pi pi-send"
+                      [disabled]="!newScore"
+                      [loading]="submittingRating"
+                      (onClick)="submitRating()"
+                    />
+                  </div>
+                </div>
+              }
+            } @else {
+              <p class="auth-hint"><i class="pi pi-lock"></i> Inicia sesión para calificar.</p>
+            }
+
+          @if (ratingSummary && ratingSummary.ratings.length > 0) {
+            <div class="ratings-list">
+              @for (r of ratingSummary.ratings; track r.id) {
+                <div class="rating-item">
+                  <div class="stars-mini">
+                    @for (star of starsArray(5); track star) {
+                      <i class="pi pi-star-fill star-mini" [class.active]="star <= r.score"></i>
+                    }
+                  </div>
+                  <span class="rating-date">{{ r.createdAt | date:'dd/MM/yyyy' }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Comentarios -->
+        <div class="comments-col">
+          <h3 class="section-title"><i class="pi pi-comments"></i> Comentarios</h3>
+
+          @if (isAuthenticated) {
+            <div class="comment-form">
+              <textarea
+                pTextarea
+                [autoResize]="true"
+                rows="3"
+                placeholder="Escribe tu comentario sobre esta sala..."
+                [(ngModel)]="newCommentContent"
+              ></textarea>
+              <p-button
+                label="Publicar"
+                icon="pi pi-send"
+                [disabled]="!newCommentContent.trim()"
+                [loading]="submittingComment"
+                (onClick)="submitComment()"
+              />
+            </div>
+          } @else {
+            <p class="auth-hint"><i class="pi pi-lock"></i> Inicia sesión para comentar.</p>
+          }
+
+          @if (comments.length === 0) {
+            <p class="no-data">No hay comentarios. ¡Sé el primero!</p>
+          } @else {
+            <div class="comments-list">
+              @for (comment of comments; track comment.id) {
+                <div class="comment-item">
+                  <div class="comment-header">
+                    <span class="comment-user"><i class="pi pi-user"></i> {{ comment.userName ?? 'Usuario' }}</span>
+                    <span class="comment-date">{{ comment.createdAt | date:'dd/MM/yyyy HH:mm' }}{{ comment.edited ? ' (editado)' : '' }}</span>
+                  </div>
+                  @if (editingCommentId === comment.id) {
+                    <div class="comment-edit-form">
+                      <textarea pTextarea [autoResize]="true" rows="2" [(ngModel)]="editCommentContent"></textarea>
+                      <div class="form-actions">
+                        <p-button label="Guardar" size="small" (onClick)="saveEditComment(comment.id)" />
+                        <p-button label="Cancelar" size="small" severity="secondary" [outlined]="true" (onClick)="cancelEditComment()" />
+                      </div>
+                    </div>
+                  } @else {
+                    <p class="comment-content">{{ comment.content }}</p>
+                    @if (comment.userId === currentUserId) {
+                      <div class="comment-actions">
+                        <p-button icon="pi pi-pencil" [text]="true" size="small" (onClick)="startEditComment(comment)" />
+                        <p-button icon="pi pi-trash" [text]="true" size="small" severity="danger" (onClick)="deleteComment(comment.id)" />
+                      </div>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+      </div><!-- /modal-bottom-grid -->
+    </div><!-- /theater-modal-content -->
+  }
+</p-dialog>

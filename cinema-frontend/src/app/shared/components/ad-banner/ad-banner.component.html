@@ -1,0 +1,58 @@
+@if (!loading && !isBlocked && ad) {
+  <div class="ad-banner-container fade-in">
+    <div class="ad-badge">Patrocinado</div>
+
+    @switch (ad.adType) {
+      
+      <!-- 1. SOLO TEXTO -->
+      @case ('TEXT') {
+        <div class="ad-content text-only">
+          <p>{{ ad.contentText }}</p>
+        </div>
+      }
+      
+      <!-- 2. TEXTO + IMAGEN -->
+      @case ('TEXT_IMAGE') {
+        <div class="ad-content with-image">
+          <div class="image-wrapper">
+            <img [src]="ad.imageUrl" alt="Anuncio" loading="lazy" />
+          </div>
+          <div class="text-wrapper">
+            <p>{{ ad.contentText }}</p>
+          </div>
+        </div>
+      }
+      
+      <!-- 3. VIDEO + TEXTO -->
+      @case ('VIDEO_TEXT') {
+        <div class="ad-content with-video">
+          <div class="video-wrapper">
+            
+            @if (isYouTube(ad.videoUrl)) {
+              <iframe 
+                [src]="getSafeYouTubeUrl(ad.videoUrl)" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+              </iframe>
+            } @else {
+              <video 
+                [src]="ad.videoUrl" 
+                controls 
+                muted 
+                autoplay 
+                loop 
+                playsinline>
+              </video>
+            }
+
+          </div>
+          <div class="text-wrapper">
+            <p>{{ ad.contentText }}</p>
+          </div>
+        </div>
+      }
+
+    }
+  </div>
+}

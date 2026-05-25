@@ -1,13 +1,48 @@
-﻿<div class="page-wrapper">
-  <p-card styleClass="page-card">
-    <ng-template pTemplate="header">
-      <div class="page-header">
-        <h1 class="page-title">{{ title }}</h1>
-        <p class="page-subtitle">{{ subtitle }}</p>
-      </div>
-    </ng-template>
-    <div class="page-content">
-      <p-progressSpinner *ngIf="false"/>
+<section class="cinemas-shell">
+  <header class="cinemas-header surface-card">
+    <p class="header-kicker">Directorio público</p>
+    <h1>Cines disponibles</h1>
+    <p>
+      Consulta información principal de cada sucursal. Las acciones administrativas
+      para crear empresa y sucursal están disponibles solo en el panel de administración.
+    </p>
+  </header>
+
+  @if (loading) {
+    <div class="state-card">
+      <p>Cargando cines...</p>
     </div>
-  </p-card>
-</div>
+  } @else if (errorMessage) {
+    <div class="state-card error">
+      <p>{{ errorMessage }}</p>
+    </div>
+  } @else if (cinemas.length === 0) {
+    <div class="state-card">
+      <p>No hay cines publicados por ahora.</p>
+    </div>
+  } @else {
+    <div class="cinemas-grid">
+      @for (cinema of cinemas; track cinema.id) {
+        <article class="cinema-card">
+          <p class="company">{{ cinema.companyName || 'Empresa no especificada' }}</p>
+          <h2>{{ cinema.name }}</h2>
+
+          <ul>
+            <li>
+              <i class="pi pi-map-marker"></i>
+              <span>{{ cinema.address || 'Dirección pendiente de publicación' }}</span>
+            </li>
+            <li>
+              <i class="pi pi-phone"></i>
+              <span>{{ cinema.phone || 'Teléfono no disponible' }}</span>
+            </li>
+            <li>
+              <i class="pi pi-envelope"></i>
+              <span>{{ cinema.email || 'Correo no disponible' }}</span>
+            </li>
+          </ul>
+        </article>
+      }
+    </div>
+  }
+</section>

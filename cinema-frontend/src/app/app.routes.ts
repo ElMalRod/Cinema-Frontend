@@ -1,4 +1,4 @@
-﻿import { Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
 import { GuestGuard } from './core/guards/guest.guard';
 import { RoleGuard } from './core/guards/role.guard';
@@ -13,11 +13,22 @@ export const routes: Routes = [
     loadComponent: () => import('./features/public/movies-page/movies-page.component').then((m) => m.MoviesPage)
   },
   {
+    path: 'movies/showtimes/:movieId',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./features/public/movie-showtimes-page/movie-showtimes-page.component').then((m) => m.MovieShowtimesPage)
+  },
+  {
     path: 'movies/:id',
     loadComponent: () => import('./features/public/movie-detail-page/movie-detail-page.component').then((m) => m.MovieDetailPage)
   },
   {
+    path: 'checkout/seats',
+    canActivate: [AuthGuard],
+    loadComponent: () => import('./features/public/checkout-seats/checkout-seats.component').then((m) => m.CheckoutSeatsComponent)
+  },
+  {
     path: 'cinemas',
+    canActivate: [AuthGuard],
     loadComponent: () => import('./features/public/cinemas-page/cinemas-page.component').then((m) => m.CinemasPage)
   },
   {
@@ -68,6 +79,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/client/comments/comments.component').then((m) => m.CommentsComponent)
   },
   {
+    path: 'dashboard/client/cinemas',
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['CLIENT'] },
+    loadComponent: () => import('./features/dashboard/client/cinemas/client-cinemas.component').then((m) => m.ClientCinemasComponent)
+  },
+  {
     path: 'dashboard/cinema/rooms',
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['CINEMA_ADMIN'] },
@@ -92,6 +109,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/cinema/ads-block/ads-block.component').then((m) => m.AdsBlockComponent)
   },
   {
+    path: 'dashboard/cinema/resources',
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['CINEMA_ADMIN', 'SYSTEM_ADMIN'] },
+    loadComponent: () => import('./features/dashboard/cinema/resources/resources.component').then((m) => m.CinemaResourcesComponent)
+  },
+  {
     path: 'dashboard/advertiser/ads',
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['ADVERTISER'] },
@@ -102,6 +125,12 @@ export const routes: Routes = [
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['ADVERTISER'] },
     loadComponent: () => import('./features/dashboard/advertiser/wallet/wallet.component').then((m) => m.AdvertiserWalletComponent)
+  },
+  {
+    path: 'dashboard/admin/users',
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['SYSTEM_ADMIN'] },
+    loadComponent: () => import('./features/dashboard/admin/users/users.component').then((m) => m.AdminUsersComponent)
   },
   {
     path: 'dashboard/admin/movies',
@@ -126,6 +155,12 @@ export const routes: Routes = [
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['SYSTEM_ADMIN'] },
     loadComponent: () => import('./features/dashboard/admin/reports/reports.component').then((m) => m.AdminReportsComponent)
+  },
+  {
+    path: 'dashboard/admin/advertisers',
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['SYSTEM_ADMIN'] },
+    loadComponent: () => import('./features/dashboard/admin/advertisers/admin-advertisers.component').then((m) => m.AdminAdvertisersComponent)
   },
   { path: '**', redirectTo: '' }
 ];

@@ -1,16 +1,36 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { CardModule } from 'primeng/card';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { RouterLink } from '@angular/router';
+
+type FeatureHighlight = {
+  icon: string;
+  title: string;
+  description: string;
+};
 
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, CardModule, ProgressSpinnerModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.scss'
 })
 export class HomePageComponent {
-  readonly title = 'Inicio';
-  readonly subtitle = 'Bienvenido al sistema de gestión de cines';
+  readonly highlights: FeatureHighlight[] = [
+    {
+      icon: 'pi pi-video',
+      title: 'Cartelera actualizada',
+      description: 'Consulta estrenos y funciones con una vista clara y ordenada.'
+    },
+    {
+      icon: 'pi pi-building',
+      title: 'Cines por ciudad',
+      description: 'Encuentra sucursales, servicios disponibles y horarios principales.'
+    },
+    {
+      icon: 'pi pi-shield',
+      title: 'Cuenta segura',
+      description: 'Administra tu perfil, comentarios y operaciones con acceso autenticado.'
+    }
+  ];
 }
