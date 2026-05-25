@@ -38,7 +38,8 @@ export class SharedNavbarComponent implements OnInit {
       { label: 'Salas', path: '/dashboard/cinema/rooms', icon: 'pi pi-building-columns' },
       { label: 'Horarios', path: '/dashboard/cinema/schedules', icon: 'pi pi-calendar' },
       { label: 'Reportes', path: '/dashboard/cinema/reports', icon: 'pi pi-chart-line' },
-      { label: 'Bloqueo de anuncios', path: '/dashboard/cinema/ads-block', icon: 'pi pi-megaphone' }
+      { label: 'Bloqueo de anuncios', path: '/dashboard/cinema/ads-block', icon: 'pi pi-megaphone' },
+      { label: 'Cartera', path: '/dashboard/cinema/wallet', icon: 'pi pi-wallet' }
     ],
     ADVERTISER: [
       { label: 'Anuncios', path: '/dashboard/advertiser/ads', icon: 'pi pi-megaphone' },

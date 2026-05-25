@@ -32,6 +32,7 @@
 
     <!-- ══ PASO 1: Empresas ══════════════════════════════════════ -->
     @if (step === 'companies') {
+      <app-ad-banner></app-ad-banner>
       <div class="step-section">
         <h2 class="step-title"><i class="pi pi-building"></i> Selecciona una empresa</h2>
         @if (companies.length === 0) {
@@ -52,6 +53,7 @@
 
     <!-- ══ PASO 2: Sucursales ════════════════════════════════════ -->
     @if (step === 'cinemas') {
+      <app-ad-banner></app-ad-banner>
       <div class="step-section">
         <div class="step-nav">
           <p-button
@@ -90,6 +92,7 @@
 
     <!-- ══ PASO 3: Funciones ═════════════════════════════════════ -->
     @if (step === 'showtimes') {
+      <app-ad-banner [cinemaId]="selectedCinema!.id"></app-ad-banner>
       <div class="step-section">
         <div class="step-nav">
           <p-button
